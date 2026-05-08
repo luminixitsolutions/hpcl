@@ -1,0 +1,222 @@
+<?php 
+session_start();
+include_once 'config.php';
+include_once 'auth.php';
+$user_id = $_SESSION['Admin']['id'];
+$AdminLoginId = $_SESSION['Admin']['id'];
+$MainPage = "Customer-Products-2025";
+$Page = "View-Cust-Stock-2025";
+?>
+<!DOCTYPE html>
+<html lang="en" class="default-style">
+<head>
+<title><?php echo $Proj_Title; ?> | View Stock List</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+<meta name="description" content="" />
+<meta name="keywords" content="">
+<meta name="author" content="" />
+<?php include_once 'header_script.php'; ?>
+</head>
+<body>
+
+ <div class="layout-wrapper layout-1 layout-without-sidenav">
+<div class="layout-inner">
+
+<?php include_once 'top_header.php'; include_once 'sidebar.php'; ?>
+
+
+<div class="layout-container">
+
+
+
+<?php
+if($_REQUEST["action"]=="delete")
+{
+  $id = $_REQUEST["id"];
+  if (!empty($id) && is_numeric($id)) {
+  $sql11 = "DELETE FROM tbl_cust_stock_ved_inv WHERE id = '$id'";
+  $conn->query($sql11);
+  $sql11 = "DELETE FROM tbl_cust_ved_prod_stock WHERE InvId='$id'";
+  $conn->query($sql11);
+  $sql11 = "DELETE FROM tbl_cust_prod_stock_2025 WHERE VedInvId='$id' AND Status='Cr' AND UserId='$BillSoftFrId'";
+  $conn->query($sql11);
+  
+  
+  $url = $_SERVER['REQUEST_URI'];
+  $createddate = date('Y-m-d H:i:s');
+  $sql = "INSERT INTO tbl_user_logs SET userid='$user_id',frid='$BillSoftFrId',url='$url',action='customer product stock record deleted',invid='$id',createddate='$createddate',roll='customer-product-stock'";
+  $conn->query($sql);
+  ?>
+    <script type="text/javascript">
+      alert("Deleted Successfully!");
+      window.location.href="view-mrp-product-grn.php";
+    </script>
+<?php } } ?>
+
+<div class="layout-content">
+
+<div class="container-fluid flex-grow-1 container-p-y">
+<h4 class="font-weight-bold py-3 mb-0">View MRP Product GRN List
+    <?php if(in_array("14", $Options)) {?>   
+<span style="float: right;">
+<a href="add-mrp-product-grn.php" class="btn btn-secondary btn-round"><i class="ion ion-md-add mr-2"></i> Add New GRN</a></span>
+<?php } ?>
+</h4>
+
+<div class="card" style="padding: 10px;">
+      <div id="accordion2">
+<div class="card mb-2">
+                                        
+                                        <div id="accordion2-2" class="collapse show" data-parent="#accordion2">
+                                            <div class="" style="padding:5px;">
+                                                <form id="validation-form" method="post" enctype="multipart/form-data" action="">
+<div class="form-row">
+
+       
+
+<div class="form-group col-md-4">
+<label class="form-label"> Vendor<span class="text-danger">*</span></label>
+ <select class="select2-demo form-control" style="width: 100%;padding-top: 12px;" name="VedId" id="VedId" data-live-search="true">
+
+<option selected="" value="">Select Vendor</option>
+<?php 
+  $sql12 = "SELECT id,Fname FROM tbl_users WHERE Status='1' AND Roll='3' AND Fname!='' ORDER BY Fname";
+  $row12 = getList($sql12);
+  foreach($row12 as $result){
+     ?>
+  <option <?php if($_REQUEST["VedId"] == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
+    <?php echo $result['Fname']; ?></option>
+<?php } ?>
+</select>
+<div class="clearfix"></div>
+</div>
+
+
+
+<div class="form-group col-md-2">
+<label class="form-label">From Date </label>
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_POST['FromDate'] ?>" autocomplete="off">
+</div>
+<div class="form-group col-md-2">
+<label class="form-label">To Date</label>
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_POST['ToDate'] ?>" autocomplete="off">
+</div>
+<input type="hidden" name="Search" value="Search">
+<div class="form-group col-md-1" style="padding-top:20px;">
+<button type="submit" name="submit" class="btn btn-primary btn-finish">Search</button>
+</div>
+<?php if(isset($_POST['Search'])) {?>
+<div class="col-md-1">
+<label class="form-label d-none d-md-block">&nbsp;</label>
+<a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
+</div>
+<?php } ?>
+</div>
+
+</form>
+                                            </div>
+                                        </div>
+                                    </div>
+   </div>
+<div class="card-datatable table-responsive">
+<table id="example" class="table table-striped table-bordered" style="width:100%">
+        <thead>
+            <tr>
+               <th>#</th>
+               <th>Invoice No</th>
+                <th>Vendor Name</th>
+                <th>Date</th>
+                <th>Stock In Qty</th>
+              
+              
+                <?php if($AdminLoginId == 2091) {?>
+              <th>Action</th>
+               <?php } ?>
+            
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            $i=1;
+             $sql = "SELECT tc.*,tu.Fname FROM tbl_cust_stock_ved_inv tc INNER JOIN tbl_users tu ON tu.id=tc.VedId WHERE tc.FrId='$BillSoftFrId' AND ProdType=0";
+          
+            if($_POST['VedId']){
+                $VedId = $_POST['VedId'];
+                if($VedId == 'all'){
+                    $sql.= " ";
+                }
+                else{
+                $sql.= " AND tc.VedId='$VedId'";
+                }
+            }
+            if($_POST['FromDate']){
+                $FromDate = $_POST['FromDate'];
+                $sql.= " AND tc.StockDate>='$FromDate'";
+            }
+            if($_POST['ToDate']){
+                $ToDate = $_POST['ToDate'];
+                $sql.= " AND tc.StockDate<='$ToDate'";
+            }
+            $sql.=" ORDER BY tc.id DESC";    
+            //echo $sql;
+            $res = $conn->query($sql);
+            while($row = $res->fetch_assoc())
+            {
+               
+             ?>
+            <tr>
+               <td><?php echo $i; ?></td>
+                <td><?php echo $row['InvNo']; ?></td>
+               <td><?php echo $row['Fname']; ?></td>
+              
+               <td><?php echo date("d/m/Y", strtotime(str_replace('-', '/',$row['StockDate']))); ?></td>
+               <td><a href="view-mrp-grn-product-list.php?id=<?php echo $row['id'];?>" target="_blank"><?php echo $row['TotalQty']; ?></a></td>
+               <?php if($AdminLoginId == 2091) {?>
+            <td>
+                 <?php if(in_array("10", $Options)){?>
+               <!-- <a href="add-cust-stock-2025.php?id=<?php echo $row['id']; ?>" ><i class="lnr lnr-pencil mr-2"></i></a>&nbsp;&nbsp;-->
+                <?php } if(in_array("11", $Options)){?>
+                <!--<a onClick="return confirm('Are you sure you want delete this record?');" href="<?php echo $_SERVER['PHP_SELF']; ?>?id=<?php echo $row['id']; ?>&action=delete" ><i class="lnr lnr-trash text-danger"></i></a>-->
+                <?php } ?>
+            </td>
+            
+            <?php } ?>
+       
+              
+            </tr>
+           <?php $i++;} ?>
+
+          
+        </tbody>
+    </table>
+</div>
+</div>
+</div>
+
+
+<?php include_once 'footer.php'; ?>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="layout-overlay layout-sidenav-toggle"></div>
+</div>
+
+
+<?php include_once 'footer_script.php'; ?>
+
+<script type="text/javascript">
+ 
+    $(document).ready(function() {
+    $('#example').DataTable({
+        "scrollX": true
+    });
+});
+</script>
+</body>
+</html>

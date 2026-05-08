@@ -1,0 +1,2 @@
+2025-05-31 13:47:15 | Mobile: 8149693719 | OTP: 7293 | Code: 200 | Response: {"code":"EC1032","status":"Authentication failed"} | cURL Error: 
+2025-05-31 13:50:55 | 8149693719 | OTP: 12345 | Response: {"code":200,"status":"success","data":[{"mobile":"918149693719","uniqueid":"73215494570_17486994550283"}]} | HTTP: 200 | Error: 

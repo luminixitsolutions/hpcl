@@ -1,0 +1,11 @@
+[30-Sep-2023 18:08:30 UTC] PHP Parse error:  syntax error, unexpected 'echo' (T_ECHO) in /home/mahabudd/public_html/billsoft/orders.php on line 88
+[03-Oct-2023 05:11:24 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/mahabudd/public_html/billsoftapp/customer-invoice-mobile.php on line 344
+[13-Jan-2024 16:53:40 UTC] PHP Warning:  Illegal string offset 'name' in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:53:40 UTC] PHP Warning:  Illegal string offset 'tmp_name' in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[13-Jan-2024 16:55:23 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:55:23 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[13-Jan-2024 16:55:29 UTC] PHP Notice:  Undefined variable: emparray in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 12
+[13-Jan-2024 16:55:56 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:55:56 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[25-Apr-2024 05:38:34 UTC] PHP Parse error:  syntax error, unexpected '$TotAmt' (T_VARIABLE) in /home/mahabudd/public_html/franchisebillsoftapp/test-print.php on line 277
+[04-Jul-2024 17:17:13 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/persistsolution/public_html/kwickfoods.in/franchisebillsoftadmin/discount-report.php on line 512

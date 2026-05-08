@@ -1,0 +1,44 @@
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222427','0','3500','7893','120','Pieces','120','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','3.75','450.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222428','0','3514','7893','120','Pieces','120','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','290.00','34800.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222429','0','3505','7893','90','Pieces','90','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','6.66','599.40','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222430','0','4394','7893','90','Pieces','90','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','270.00','24300.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222431','0','3509','7893','60','Pieces','60','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','6.75','405.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222432','0','4403','7893','60','Pieces','60','Pieces','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','4.50','270.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222433','0','4405','7893','3000','Gm','03','Kg','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','135.00','405.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222434','0','4417','7893','15000','Gm','15','Kg','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','350.00','5250.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222435','0','4418','7893','10000','Gm','10','Kg','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','265.00','2650.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4222436','0','4419','7893','30000','Gm','30','Kg','Cr','2025-07-31','2025-07-31 15:26:27','','0','2003','0','','0','7893','0','85.00','2550.00','','1','0','0','0','No','No','0','No','0','0');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762542','0','3500','7893','120','Pieces','120','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','3.75','450.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762543','0','3514','7893','120','Pieces','120','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','290.00','34800.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762544','0','3505','7893','90','Pieces','90','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','6.66','599.40','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762545','0','3508','7893','90','Pieces','90','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','6.75','607.50','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762546','0','3509','7893','60','Pieces','60','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','6.50','390.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762547','0','4403','7893','60','Pieces','60','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','4.50','270.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762548','0','4405','7893','3000','Gm','03','Kg','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','125.00','375.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762549','0','4417','7893','15000','Gm','15','Kg','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','350.00','5250.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762550','0','4418','7893','10000','Gm','10','Kg','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','265.00','2650.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762551','0','4419','7893','30000','Gm','30','Kg','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','85.00','2550.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762552','0','3856','7893','5','Pieces','05','Pieces','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','55.00','275.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');
+INSERT INTO tbl_cust_prod_stock_2025 (SellPrice, PurchasePrice, ProdType, UserId, Qty2, Unit2, FrId, ProdId, Qty, Unit, CreatedBy, StockDate, Narration, Status, CreatedDate) 
+            VALUES ('4762553','0','3979','7893','5000','Gm','05','Kg','Cr','2025-07-24','2025-08-19 13:50:11','','0','2003','0','','0','7893','0','70.00','350.00','','1','0','0','0','No','No','0','No','0','0','7784','','','0','');

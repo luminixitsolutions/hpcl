@@ -1,0 +1,981 @@
+<?php 
+require_once 'config.php';?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup API - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .shop-selector {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .shop-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .shop-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .shop-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.3s;
+        }
+
+        .section:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            background: linear-gradient(to right, #667eea, #764ba2);
+            color: white;
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .section-content {
+            padding: 20px;
+            background: white;
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .setting-item label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .setting-item .description {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #48bb78;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .dropdown, .number-input, .text-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s;
+        }
+
+        .dropdown:focus, .number-input:focus, .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-enabled {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-disabled {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .info-box {
+            padding: 16px;
+            background: #edf2f7;
+            border-left: 4px solid #4299e1;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .subsection {
+            margin-top: 20px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .subsection-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+        <!-- Include Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Include jQuery and Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎛️ Setup API Admin Panel</h1>
+            <p>Remotely control app settings for each shop</p>
+        </div>
+
+        <div class="content">
+            <!-- Shop Selector -->
+            <div class="shop-selector">
+    <label>Select Shop / User ID:</label>
+    <select id="shopSelector" onchange="loadShopConfig()" class="form-select">
+        <option value="">-- Select a Shop --</option>
+        <?php 
+        $sql = "SELECT id,ShopName FROM tbl_users WHERE Roll=5 AND Status=1 ORDER BY ShopName ASC";
+        $row = getList($sql);
+        foreach($row as $result){
+            $sql2 = "SELECT * FROM setup_configurations WHERE userid='".$result['id']."'";
+            $rncnt2 = getRow($sql2);
+            if($rncnt2 == 0){
+               $config_json = '{
+    "section_visibility": {
+        "show_printer_configuration": true,
+        "show_receipt_configuration": true,
+        "show_billing_options": true,
+        "show_multi_kitchen_printing": true,
+        "show_logo_configuration": true,
+        "show_tax_configuration": true
+    },
+    "printer_config": {
+        "printer_type": "wired",
+        "paper_size": "3-inch",
+        "selected_bluetooth_printer": "",
+        "enabled_by_admin": true
+    },
+    "receipt_config": {
+        "receipt_type": "bazaar",
+        "show_logo": true,
+        "show_qr_code": true,
+        "show_scan_to_pay": false,
+        "show_feedback_qr": true,
+        "enabled_by_admin": true
+    },
+    "table_billing_config": {
+        "enable_table_billing": false,
+        "table_count": 10,
+        "enabled_by_admin": true
+    },
+    "payment_options": {
+        "show_cash_calculator": true,
+        "show_open_calculator": false,
+        "show_redeem_points": false,
+        "enable_split_payment": false,
+        "enabled_by_admin": true
+    },
+    "product_settings": {
+        "show_product_photos": false,
+        "show_product_stock": true,
+        "show_barcode_scanner_icon": false,
+        "block_out_of_stock_cart": true,
+        "restrict_discount_on_mrp": true,
+        "enabled_by_admin": true
+    },
+    "multi_kitchen_config": {
+        "enable_multi_kitchen_printing": false,
+        "south_indian_printer_name": "",
+        "chinese_printer_name": "",
+        "receipt_printer_name": "",
+        "south_indian_kitchen_header_name": "SOUTH INDIAN KITCHEN",
+        "chinese_kitchen_header_name": "CHINESE KITCHEN",
+        "enabled_by_admin": true
+    },
+    "advanced_features": {
+        "show_kot": true,
+        "show_kot_buttons": false,
+        "show_kot_summary": false,
+        "show_email_field": true,
+        "show_order_instruction": true,
+        "show_ac_charge": false,
+        "show_coupon_code": false,
+        "show_export_data_button": false,
+        "show_diagnostic_button": false,
+        "show_exchange_button": false,
+        "show_online_orders_button": false,
+        "enable_crosssell_dialog": false,
+        "require_customer_details_for_credit": false,
+        "require_customer_details_for_discount": false,
+        "enabled_by_admin": true
+    },
+    "tax_config": {
+        "enable_gst": true,
+        "enabled_by_admin": true
+    },
+    "logo_config": {
+        "logo_url": "",
+        "enabled_by_admin": true
+    },
+    "display_options": {
+        "show_price_range": false,
+        "show_top_sellers_option": false,
+        "show_top_sellers_badge": true,
+        "compact_mode": false,
+        "enabled_by_admin": true
+    }
+}';
+                $sql3 = "INSERT INTO setup_configurations SET userid='".$result['id']."',config_json='$config_json',created_at='".date('Y-m-d H:i:s')."'";
+                $conn->query($sql3);
+            }
+            echo '<option value="'.$result['id'].'">'.$result['ShopName'].'</option>';
+        }
+        ?>
+    </select>
+</div>
+
+
+         <div id="configPanel" style="display: none;">
+                <!-- Info Box -->
+                <div class="info-box">
+                    <p><strong>💡 Tip:</strong> Changes made here will be synced to the selected shop's app on their next startup or when they manually sync. You can control which sections and features are visible to users.</p>
+                </div>
+
+                <!-- Section Visibility -->
+                <div class="section">
+                    <div class="section-header">
+                        📋 Section Visibility Control
+                        <span class="status-badge status-enabled">ACTIVE</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="section_printer" checked>
+                                Show Printer Configuration
+                            </label>
+                            <p class="description">Control whether users can see and modify printer settings</p>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="section_receipt" checked>
+                                Show Receipt Configuration
+                            </label>
+                            <p class="description">Control receipt format and appearance settings visibility</p>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="section_billing" checked>
+                                Show Billing Options
+                            </label>
+                            <p class="description">Control billing features and options visibility</p>
+                        </div>
+                        <div class="setting-item">
+                            <label>
+                                <input type="checkbox" id="section_multi_kitchen" checked>
+                                Show Multi-Kitchen Printing
+                            </label>
+                            <p class="description">Control multi-kitchen printer configuration visibility</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Printer Configuration -->
+                <div class="section">
+                    <div class="section-header">
+                        🖨️ Printer Configuration
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label>Printer Type</label>
+                            <p class="description">Default printer type for this shop</p>
+                            <select class="dropdown" id="printer_type">
+                                <option value="wired">Wired Printer</option>
+                                <option value="bluetooth">Bluetooth Printer</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Paper Size</label>
+                            <p class="description">Receipt paper size configuration</p>
+                            <select class="dropdown" id="paper_size">
+                                <option value="2-inch">2-inch (58mm)</option>
+                                <option value="3-inch" selected>3-inch (80mm)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Configuration -->
+                <div class="section">
+                    <div class="section-header">
+                        🧾 Receipt Configuration
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label>Receipt Type</label>
+                            <p class="description">Choose between retail or bazaar receipt format</p>
+                            <select class="dropdown" id="receipt_type">
+                                <option value="retail" selected>Retail</option>
+                                <option value="bazaar">Bazaar</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_logo" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_logo">Show Logo on Receipt</label>
+                            <p class="description">Display shop logo on printed receipts</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_scan_to_pay">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_scan_to_pay">Show Scan to Pay</label>
+                            <p class="description">Display UPI QR code section on billing page</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_feedback_qr" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_feedback_qr">Show Feedback QR</label>
+                            <p class="description">Print feedback QR code on receipts</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Billing -->
+                <div class="section">
+                    <div class="section-header">
+                        🪑 Table Billing Configuration
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enable_table_billing">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="enable_table_billing">Enable Table-wise Billing</label>
+                            <p class="description">Allow billing with table numbers</p>
+                        </div>
+                        <div class="setting-item">
+                            <label>Number of Tables</label>
+                            <p class="description">Total tables to display (1-50)</p>
+                            <input type="number" class="number-input" id="table_count" value="12" min="1" max="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Options -->
+                <div class="section">
+                    <div class="section-header">
+                        💳 Payment Options
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_cash_calculator" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_cash_calculator">Show Cash Calculator</label>
+                            <p class="description">Display cash calculator on billing page</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_redeem_points">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_redeem_points">Show Redeem Points</label>
+                            <p class="description">Enable loyalty points redemption section</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enable_split_payment">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="enable_split_payment">Enable Split Payment</label>
+                            <p class="description">Allow splitting payment across multiple modes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Settings -->
+                <div class="section">
+                    <div class="section-header">
+                        📦 Product Settings
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_product_photos">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_product_photos">Show Product Photos</label>
+                            <p class="description">Display product images on billing page</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_product_stock">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_product_stock">Show Product Stock</label>
+                            <p class="description">Display available stock quantity</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_barcode_scanner">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_barcode_scanner">Show Barcode Scanner</label>
+                            <p class="description">Display barcode scanner icon</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="block_out_of_stock_cart" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="block_out_of_stock_cart">Block Out-of-Stock Products in Cart</label>
+                            <p class="description">Prevent adding items to cart when available stock is zero</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="restrict_discount_mrp" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="restrict_discount_mrp">Restrict Discount on MRP Products</label>
+                            <p class="description">Block discount entry whenever the product is configured with MRP pricing</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Features -->
+                <div class="section">
+                    <div class="section-header">
+                        ⚙️ Advanced Features
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_online_orders_button">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_online_orders_button">Show Online Orders Button</label>
+                            <p class="description">Display online orders access in header</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_export_data_button">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_export_data_button">Show Export Data Button</label>
+                            <p class="description">Enable data export functionality</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="enable_crosssell_dialog" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="enable_crosssell_dialog">Enable CrossSell Dialog</label>
+                            <p class="description">Show product recommendations after billing</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="show_diagnostic_button">
+                                <span class="slider"></span>
+                            </label>
+                            <label for="show_diagnostic_button">Show Diagnostic Button</label>
+                            <p class="description">Display diagnostic button for troubleshooting and debugging</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="require_discount_customer_details" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="require_discount_customer_details">Require Customer Details for Discounts</label>
+                            <p class="description">Force cashier to capture customer name & phone whenever a discount % is applied</p>
+                        </div>
+                        <div class="setting-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="require_credit_customer_details" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <label for="require_credit_customer_details">Require Customer Details for Credit/Borrowing</label>
+                            <p class="description">Enforce customer name & phone when Credit or Borrowing payment modes are selected</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="saveConfig()">
+                        💾 Save Configuration
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadShopConfig()">
+                        🔄 Refresh
+                    </button>
+                    <button class="btn btn-danger" onclick="resetToDefaults()">
+                        ↩️ Reset to Defaults
+                    </button>
+                </div>
+            </div>
+
+            <div id="loadingPanel" class="loading">
+                <div class="spinner"></div>
+                <p>Select a shop to load configuration...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'https://hpclpos.com/flutter_api/setup';
+
+        // Load shop configuration
+        async function loadShopConfig() {
+            const shopId = document.getElementById('shopSelector').value;
+            
+            if (!shopId) {
+                document.getElementById('configPanel').style.display = 'none';
+                document.getElementById('loadingPanel').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('loadingPanel').innerHTML = '<div class="spinner"></div><p>Loading configuration...</p>';
+            document.getElementById('loadingPanel').style.display = 'block';
+            document.getElementById('configPanel').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/get-setup.php?userid=${shopId}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data) {
+                    populateForm(data.data);
+                    document.getElementById('configPanel').style.display = 'block';
+                    document.getElementById('loadingPanel').style.display = 'none';
+                } else {
+                    alert('Failed to load configuration: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error loading configuration: ' + error.message);
+            }
+        }
+
+        // Populate form with configuration data
+        function populateForm(config) {
+            // Section Visibility
+            document.getElementById('section_printer').checked = config.section_visibility?.show_printer_configuration ?? true;
+            document.getElementById('section_receipt').checked = config.section_visibility?.show_receipt_configuration ?? true;
+            document.getElementById('section_billing').checked = config.section_visibility?.show_billing_options ?? true;
+            document.getElementById('section_multi_kitchen').checked = config.section_visibility?.show_multi_kitchen_printing ?? true;
+
+            // Printer Configuration
+            document.getElementById('printer_type').value = config.printer_config?.printer_type ?? 'wired';
+            document.getElementById('paper_size').value = config.printer_config?.paper_size ?? '3-inch';
+
+            // Receipt Configuration
+            document.getElementById('receipt_type').value = config.receipt_config?.receipt_type ?? 'retail';
+            document.getElementById('show_logo').checked = config.receipt_config?.show_logo ?? true;
+            document.getElementById('show_scan_to_pay').checked = config.receipt_config?.show_scan_to_pay ?? false;
+            document.getElementById('show_feedback_qr').checked = config.receipt_config?.show_feedback_qr ?? true;
+
+            // Table Billing
+            document.getElementById('enable_table_billing').checked = config.table_billing_config?.enable_table_billing ?? false;
+            document.getElementById('table_count').value = config.table_billing_config?.table_count ?? 12;
+
+            // Payment Options
+            document.getElementById('show_cash_calculator').checked = config.payment_options?.show_cash_calculator ?? true;
+            document.getElementById('show_redeem_points').checked = config.payment_options?.show_redeem_points ?? false;
+            document.getElementById('enable_split_payment').checked = config.payment_options?.enable_split_payment ?? false;
+
+            // Product Settings
+            document.getElementById('show_product_photos').checked = config.product_settings?.show_product_photos ?? false;
+            document.getElementById('show_product_stock').checked = config.product_settings?.show_product_stock ?? false;
+            document.getElementById('show_barcode_scanner').checked = config.product_settings?.show_barcode_scanner_icon ?? false;
+            document.getElementById('block_out_of_stock_cart').checked = config.product_settings?.block_out_of_stock_cart ?? true;
+            document.getElementById('restrict_discount_mrp').checked = config.product_settings?.restrict_discount_on_mrp ?? true;
+
+            // Advanced Features
+            document.getElementById('show_online_orders_button').checked = config.advanced_features?.show_online_orders_button ?? false;
+            document.getElementById('show_export_data_button').checked = config.advanced_features?.show_export_data_button ?? false;
+            document.getElementById('enable_crosssell_dialog').checked = config.advanced_features?.enable_crosssell_dialog ?? true;
+            document.getElementById('show_diagnostic_button').checked = config.advanced_features?.show_diagnostic_button ?? false;
+            document.getElementById('require_discount_customer_details').checked = config.advanced_features?.require_customer_details_for_discount ?? true;
+            document.getElementById('require_credit_customer_details').checked = config.advanced_features?.require_customer_details_for_credit ?? true;
+        }
+
+        // Save configuration
+        async function saveConfig() {
+            const shopId = document.getElementById('shopSelector').value;
+            
+            if (!shopId) {
+                alert('Please select a shop first');
+                return;
+            }
+
+            const config = {
+                section_visibility: {
+                    show_printer_configuration: document.getElementById('section_printer').checked,
+                    show_receipt_configuration: document.getElementById('section_receipt').checked,
+                    show_billing_options: document.getElementById('section_billing').checked,
+                    show_multi_kitchen_printing: document.getElementById('section_multi_kitchen').checked,
+                    show_logo_configuration: true,
+                    show_tax_configuration: true
+                },
+                printer_config: {
+                    printer_type: document.getElementById('printer_type').value,
+                    paper_size: document.getElementById('paper_size').value,
+                    selected_bluetooth_printer: '',
+                    enabled_by_admin: true
+                },
+                receipt_config: {
+                    receipt_type: document.getElementById('receipt_type').value,
+                    show_logo: document.getElementById('show_logo').checked,
+                    show_qr_code: true,
+                    show_scan_to_pay: document.getElementById('show_scan_to_pay').checked,
+                    show_feedback_qr: document.getElementById('show_feedback_qr').checked,
+                    enabled_by_admin: true
+                },
+                table_billing_config: {
+                    enable_table_billing: document.getElementById('enable_table_billing').checked,
+                    table_count: parseInt(document.getElementById('table_count').value),
+                    enabled_by_admin: true
+                },
+                payment_options: {
+                    show_cash_calculator: document.getElementById('show_cash_calculator').checked,
+                    show_open_calculator: false,
+                    show_redeem_points: document.getElementById('show_redeem_points').checked,
+                    enable_split_payment: document.getElementById('enable_split_payment').checked,
+                    enabled_by_admin: true
+                },
+                product_settings: {
+                    show_product_photos: document.getElementById('show_product_photos').checked,
+                    show_product_stock: document.getElementById('show_product_stock').checked,
+                    show_barcode_scanner_icon: document.getElementById('show_barcode_scanner').checked,
+                    block_out_of_stock_cart: document.getElementById('block_out_of_stock_cart').checked,
+                    restrict_discount_on_mrp: document.getElementById('restrict_discount_mrp').checked,
+                    enabled_by_admin: true
+                },
+                multi_kitchen_config: {
+                    enable_multi_kitchen_printing: false,
+                    south_indian_printer_name: '',
+                    chinese_printer_name: '',
+                    receipt_printer_name: '',
+                    south_indian_kitchen_header_name: 'SOUTH INDIAN KITCHEN',
+                    chinese_kitchen_header_name: 'CHINESE KITCHEN',
+                    enabled_by_admin: true
+                },
+                advanced_features: {
+                    show_kot: true,
+                    show_kot_buttons: false,
+                    show_kot_summary: false,
+                    show_email_field: true,
+                    show_order_instruction: true,
+                    show_ac_charge: false,
+                    show_coupon_code: false,
+                    show_export_data_button: document.getElementById('show_export_data_button').checked,
+                    show_diagnostic_button: document.getElementById('show_diagnostic_button').checked,
+                    show_exchange_button: false,
+                    show_online_orders_button: document.getElementById('show_online_orders_button').checked,
+                    enable_crosssell_dialog: document.getElementById('enable_crosssell_dialog').checked,
+                    require_customer_details_for_credit: document.getElementById('require_credit_customer_details').checked,
+                    require_customer_details_for_discount: document.getElementById('require_discount_customer_details').checked,
+                    enabled_by_admin: true
+                },
+                tax_config: {
+                    enable_gst: true,
+                    enabled_by_admin: true
+                },
+                logo_config: {
+                    logo_url: '',
+                    enabled_by_admin: true
+                },
+                display_options: {
+                    show_price_range: false,
+                    show_top_sellers_option: false,
+                    show_top_sellers_badge: true,
+                    compact_mode: false,
+                    enabled_by_admin: true
+                }
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/update-setup.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userid: shopId,
+                        config: config
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    alert('✅ Configuration saved successfully!\n\nThe shop will receive these settings on their next app startup or when they manually sync.');
+                } else {
+                    alert('❌ Failed to save configuration: ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Error saving configuration: ' + error.message);
+            }
+        }
+
+        // Reset to defaults
+        function resetToDefaults() {
+            if (!confirm('Are you sure you want to reset all settings to defaults? This will override all current settings.')) {
+                return;
+            }
+
+            // Reset all checkboxes and inputs to defaults
+            document.getElementById('section_printer').checked = true;
+            document.getElementById('section_receipt').checked = true;
+            document.getElementById('section_billing').checked = true;
+            document.getElementById('section_multi_kitchen').checked = true;
+            document.getElementById('printer_type').value = 'wired';
+            document.getElementById('paper_size').value = '3-inch';
+            document.getElementById('receipt_type').value = 'retail';
+            document.getElementById('show_logo').checked = true;
+            document.getElementById('show_scan_to_pay').checked = false;
+            document.getElementById('show_feedback_qr').checked = true;
+            document.getElementById('enable_table_billing').checked = false;
+            document.getElementById('table_count').value = 12;
+            document.getElementById('show_cash_calculator').checked = true;
+            document.getElementById('show_redeem_points').checked = false;
+            document.getElementById('enable_split_payment').checked = false;
+            document.getElementById('show_product_photos').checked = false;
+            document.getElementById('show_product_stock').checked = false;
+            document.getElementById('show_barcode_scanner').checked = false;
+            document.getElementById('block_out_of_stock_cart').checked = true;
+            document.getElementById('restrict_discount_mrp').checked = true;
+            document.getElementById('show_online_orders_button').checked = false;
+            document.getElementById('show_export_data_button').checked = false;
+            document.getElementById('enable_crosssell_dialog').checked = true;
+            document.getElementById('show_diagnostic_button').checked = false;
+            document.getElementById('require_discount_customer_details').checked = true;
+            document.getElementById('require_credit_customer_details').checked = true;
+
+            alert('Settings reset to defaults. Click "Save Configuration" to apply.');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin Panel loaded successfully');
+        });
+    </script>
+</body>
+</html>
+
+
+
+

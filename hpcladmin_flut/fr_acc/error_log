@@ -1,0 +1,15 @@
+[30-Sep-2023 18:08:30 UTC] PHP Parse error:  syntax error, unexpected 'echo' (T_ECHO) in /home/mahabudd/public_html/billsoft/orders.php on line 88
+[03-Oct-2023 05:11:24 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/mahabudd/public_html/billsoftapp/customer-invoice-mobile.php on line 344
+[13-Jan-2024 16:53:40 UTC] PHP Warning:  Illegal string offset 'name' in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:53:40 UTC] PHP Warning:  Illegal string offset 'tmp_name' in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[13-Jan-2024 16:55:23 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:55:23 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[13-Jan-2024 16:55:29 UTC] PHP Notice:  Undefined variable: emparray in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 12
+[13-Jan-2024 16:55:56 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 5
+[13-Jan-2024 16:55:56 UTC] PHP Notice:  Undefined index: filename in /home/mahabudd/public_html/billsoftapp/file-upload-api.php on line 6
+[25-Apr-2024 05:38:34 UTC] PHP Parse error:  syntax error, unexpected '$TotAmt' (T_VARIABLE) in /home/mahabudd/public_html/franchisebillsoftapp/test-print.php on line 277
+[04-Jul-2024 17:17:13 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/persistsolution/public_html/kwickfoods.in/franchisebillsoftadmin/discount-report.php on line 512
+[08-Jan-2025 08:51:19 UTC] PHP Parse error:  syntax error, unexpected '}', expecting end of file in /home/persistsolution/public_html/kwickfoods.in/billsoftappadmin2025/fr_acc/dashboard.php on line 163
+[06-Feb-2025 17:12:15 UTC] PHP Fatal error:  Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.2.0". You are running 7.3.33. in /home/persistsolution/public_html/kwickfoods.in/billsoftappadmin2025/fr_acc/vendor/composer/platform_check.php on line 28
+[01-May-2025 12:18:08 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/persistsolution/public_html/kwickfoods.in/billsoftappadmin2025/fr_acc/view-transfer-franchise-to-franchise-stock.php on line 156
+[03-Jun-2025 09:08:11 UTC] PHP Parse error:  syntax error, unexpected end of file in /home/persistsolution/public_html/kwickfoods.in/billsoftappadmin2025/fr_acc/upload-raw-stock-by-excel.php on line 288

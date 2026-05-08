@@ -1,0 +1,21 @@
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(config.php): failed to open stream: No such file or directory in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(): Failed opening 'config.php' for inclusion (include_path='.:/opt/alt/php73/usr/share/pear') in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Notice:  Undefined index: Admin in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 5
+[20-Oct-2023 15:36:03 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getRecord() in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php:228
+Stack trace:
+#0 {main}
+  thrown in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 228
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(config.php): failed to open stream: No such file or directory in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(): Failed opening 'config.php' for inclusion (include_path='.:/opt/alt/php73/usr/share/pear') in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Notice:  Undefined index: Admin in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 5
+[20-Oct-2023 15:36:03 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getRecord() in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php:228
+Stack trace:
+#0 {main}
+  thrown in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 228
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(config.php): failed to open stream: No such file or directory in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Warning:  include_once(): Failed opening 'config.php' for inclusion (include_path='.:/opt/alt/php73/usr/share/pear') in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 3
+[20-Oct-2023 15:36:03 UTC] PHP Notice:  Undefined index: Admin in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 5
+[20-Oct-2023 15:36:03 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getRecord() in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php:228
+Stack trace:
+#0 {main}
+  thrown in /home/mahabudd/public_html/billsoftapp/smsdata/receipt.php on line 228

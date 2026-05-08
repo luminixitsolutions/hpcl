@@ -1,0 +1,4 @@
+RewriteEngine On 
+
+RewriteRule receipt/(.*)/ receipt.php?pageurl=$1
+RewriteRule receipt/(.*) receipt.php?pageurl=$1
