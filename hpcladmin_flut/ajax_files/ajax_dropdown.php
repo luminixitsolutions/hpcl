@@ -1,43 +1,64 @@
 <?php 
 session_start();
 include_once __DIR__ . '/../config.php';
-$user_id = $_SESSION['Admin']['id'];
+$user_id = $_SESSION['Admin']['id'] ?? '';
 $action = req('action', '');
 if ($action === 'getState'){?>
     <option value="" selected="selected" disabled="">Select State</option>
 <?php 
-    $CountryId = $_POST['id'];
-        $q = "select * from tbl_state WHERE CountryId = '$CountryId' AND Status='1'";
+    $CountryId = req('id', '');
+    if ($CountryId !== '') {
+        $CountryId = mysqli_real_escape_string($conn, $CountryId);
+        $q = "select * from tbl_state WHERE CountryId = '$CountryId' AND Status='1' ORDER BY Name";
         $r = $conn->query($q);
-        while($rw = $r->fetch_assoc())
-    {
+        if ($r) {
+            while($rw = $r->fetch_assoc())
+            {
 ?>
                 <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-<?php } } 
+<?php }
+        }
+    }
+    exit;
+}
 
 if($action == 'getCity'){?>
     <option value="" selected="selected" disabled="">Select City</option>
 <?php 
-    $StateId = $_POST['id'];
-        $q = "select * from tbl_city WHERE StateId = '$StateId' AND Status='1'";
+    $StateId = req('id', '');
+    if ($StateId !== '') {
+        $StateId = mysqli_real_escape_string($conn, $StateId);
+        $q = "select * from tbl_city WHERE StateId = '$StateId' AND Status='1' ORDER BY Name";
         $r = $conn->query($q);
-        while($rw = $r->fetch_assoc())
-    {
+        if ($r) {
+            while($rw = $r->fetch_assoc())
+            {
 ?>
                 <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-<?php } } 
+<?php }
+        }
+    }
+    exit;
+}
 
 if($action == 'getArea'){?>
     <option value="" selected="selected" disabled="">Select Area</option>
 <?php 
-    $CityId = $_POST['id'];
-        $q = "select * from tbl_area WHERE CityId = '$CityId' AND Status='1'";
+    $CityId = req('id', '');
+    if ($CityId !== '') {
+        $CityId = mysqli_real_escape_string($conn, $CityId);
+        $q = "select * from tbl_area WHERE CityId = '$CityId' AND Status='1' ORDER BY Name";
         $r = $conn->query($q);
-        while($rw = $r->fetch_assoc())
-    {
+        if ($r) {
+            while($rw = $r->fetch_assoc())
+            {
 ?>
                 <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-<?php } } 
+<?php }
+        }
+    }
+    exit;
+} 
 
 if ($action == 'getPincode') {
 
@@ -413,15 +434,27 @@ if($action == 'getRawProductDetails'){
     echo json_encode(array('Unit'=>$row['Unit']));
     }
     
-    if($action == 'getSubZone'){?>
-     <option value="all" selected="selected" >All</option>
-<?php 
-    $DeptId = $_POST['id'];
-         $q = "select * from tbl_sub_zone WHERE CatId = '$DeptId' AND Status='1' ";
+if($action == 'getSubZone'){
+    $DeptId = req('id', '');
+    $listType = req('listtype', 'report');
+    $selectedSubZoneId = req('subzoneid', '');
+    if($listType === 'form'){ ?>
+    <option value="" selected="" disabled="">Select</option>
+<?php } else { ?>
+    <option value="all" selected="selected">All</option>
+<?php }
+    if($DeptId !== ''){
+        $DeptId = mysqli_real_escape_string($conn, $DeptId);
+        $q = "SELECT * FROM tbl_sub_zone WHERE CatId = '$DeptId' AND Status=1 ORDER BY Name";
         $r = $conn->query($q);
-        while($rw = $r->fetch_assoc())
-    {
+        if($r){
+            while($rw = $r->fetch_assoc())
+            {
 ?>
-    <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-<?php } }    
+    <option value="<?php echo $rw['id']; ?>"<?php if($selectedSubZoneId !== '' && (string)$selectedSubZoneId === (string)$rw['id']) { ?> selected<?php } ?>><?php echo $rw['Name']; ?></option>
+<?php }
+        }
+    }
+    exit;
+}
 ?>

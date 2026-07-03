@@ -30,15 +30,21 @@ $Page = "Products";
 <div class="layout-container">
 
 <?php 
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if($id > 0){
-$sql7 = "SELECT * FROM tbl_product_group WHERE id='$id'";
-$row7 = getRecord($sql7);
-$currentProdIds = explode(',', $row7['ProdId']);
-} else {
-    $row7 = [];
-    $currentProdIds = [];
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$row7 = [];
+$currentProdIds = [];
+
+if ($id > 0) {
+    $sql7 = "SELECT * FROM tbl_product_group WHERE id='$id'";
+    $fetched = getRecord($sql7);
+    if (is_array($fetched)) {
+        $row7 = $fetched;
+        $currentProdIds = !empty($row7['ProdId']) ? explode(',', $row7['ProdId']) : [];
+    }
 }
+
+$row7Defaults = ['GroupName' => '', 'ProdId' => '', 'Status' => '1'];
+$row7 = array_merge($row7Defaults, $row7);
 
 // Get all product IDs already used in any group
 $sql8 = "SELECT GROUP_CONCAT(DISTINCT ProdId) AS SaveProdId FROM tbl_product_group WHERE Status=1";
@@ -66,7 +72,7 @@ else{
    $ProdId = 0; 
 }
 
-if($_GET['id'] == ''){
+if($id <= 0){
     $sql = "INSERT INTO tbl_product_group SET GroupName='$GroupName',ProdId='$ProdId',Status='$Status',CreatedBy='$user_id'";
     $conn->query($sql);
     echo "<script>alert('Group Created Successfully');window.location.href='view-product-group.php';</script>";
@@ -81,7 +87,7 @@ else{
 <div class="layout-content">
 
 <div class="container-fluid flex-grow-1 container-p-y">
-<h4 class="font-weight-bold py-3 mb-0">Create Product Group</h4>
+<h4 class="font-weight-bold py-3 mb-0"><?php echo $id > 0 ? 'Edit' : 'Create'; ?> Product Group</h4>
 
 
 <form action="" method="POST" enctype="multipart/form-data" autocomplete="off">
@@ -91,7 +97,7 @@ else{
 <div class="card-body">
     <input type="hidden" name="action" value="Add">
     <input type="hidden" id="TempPrdId" name="TempPrdId" value="<?php echo rand(10000,99999);?>">
-    <input type="hidden" name="id" id="id" value="<?php echo $_GET['id']; ?>"/> 
+    <input type="hidden" name="id" id="id" value="<?php echo $id > 0 ? $id : ''; ?>"/>
      <div class="form-row">
 <div class="form-group col-lg-12">
 <label class="form-label">Group Name<span class="text-danger">*</span></label>

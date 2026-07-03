@@ -58,9 +58,9 @@ $sql = "SELECT * FROM tbl_cust_products_2025 WHERE code is null";
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "delete")
 {
-    $id = $_REQUEST["id"];
+    $id = $_REQUEST["id"] ?? '';
     /*$sql = "SELECT * FROM tbl_cust_products_2025 WHERE checkstatus=1 AND ProdId='$id'";
     $rncnt = getRow($sql);
     if($rncnt > 0){

@@ -18,6 +18,12 @@ $_SESSION['Admin'] = $row;
 }
 //echo $sql11;
 $Roll = $row['Roll'];
+$CocoFranchiseAccess = $row['CocoFranchiseAccess'] ?? '';
+include_once 'shop_admin_helper.php';
+if (isShopAdmin($Roll)) {
+    shopAdminEnforceZoneAccess((int)($_GET['zoneid'] ?? 0), $row);
+}
+$MainPage = "Top-Sell-Dashboard";
 /*function RandomStringGenerator($n)
 {
     $generated_string = "";   
@@ -373,7 +379,7 @@ if($_POST['calendar']){
             $subzoneid = $result['id'];
   $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='".$_GET['zoneid']."'";
   $row77 = getRecord($sql77);
-  $frids = $row77['FrId'];
+  $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
    // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
         continue;
@@ -698,7 +704,7 @@ foreach ($row as $result) {
      $zoneName = $result['Name'];
     $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='$zoneid' AND Roll=5";
     $row77 = getRecord($sql77);
-    $frids = $row77['FrId'];
+    $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
      // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
         continue;

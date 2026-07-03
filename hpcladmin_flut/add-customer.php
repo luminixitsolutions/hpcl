@@ -2,15 +2,17 @@
 session_start();
 include_once 'config.php';
 //include_once 'auth.php';
-$user_id = $_SESSION['Admin']['id'];
+$user_id = $_SESSION['Admin']['id'] ?? '';
 $MainPage="Customers";
 $Page = "Add-Customers";
 
 // GET parameters
-$uid  = $_GET['user_id'] ?? '';
-$lat  = $_GET['lat'] ?? '';
-$long = $_GET['lng'] ?? '';
-$test = $_GET['test'] ?? '';
+$uid    = $_GET['user_id'] ?? '';
+$lat    = $_GET['lat'] ?? '';
+$long   = $_GET['lng'] ?? '';
+$test   = $_GET['test'] ?? '';
+$id     = $_GET['id'] ?? '';
+$action = $_REQUEST['action'] ?? '';
 
 /* ==============================
    USER FETCH LOGIC (DO NOT REMOVE)
@@ -57,7 +59,7 @@ if ($long !== '') {
 <html lang="en" class="default-style">
 
 <head>
-    <title><?php echo $Proj_Title; ?> - <?php if($_GET['id']) {?>Edit <?php } else{?> Add <?php } ?> Customer Account
+    <title><?php echo $Proj_Title; ?> - <?php if($id) {?>Edit <?php } else{?> Add <?php } ?> Customer Account
     </title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -132,16 +134,35 @@ if ($long !== '') {
                 
 
                 <?php 
-$id = $_GET['id'];
 $sql7 = "SELECT * FROM tbl_users WHERE id='$id'";
 $row7 = getRecord($sql7);
-$row7['ZomatoSwiggy'] = explode(',', $row7['ZomatoSwiggy']);
+$row7Defaults = [
+    'ZoneId' => '', 'SubZoneId' => '', 'CustomerId' => '', 'Fname' => '', 'ShopName' => '',
+    'Mname' => '', 'Lname' => '', 'EmailId' => '', 'Password' => '', 'Phone' => '', 'Phone2' => '',
+    'Location' => '', 'Details' => '', 'Photo' => '', 'CountryId' => '', 'StateId' => '', 'CityId' => '',
+    'Pincode' => '', 'Address' => '', 'ExeId' => '', 'SellAmt' => '', 'SellDate' => '', 'OwnFranchise' => '',
+    'FrDevCost' => '', 'MonthlyRent' => '', 'PumpName' => '', 'SpacePartner' => '', 'Lattitude' => '',
+    'Longitude' => '', 'MenuId' => '', 'NewFr' => '', 'AlianceName' => '', 'AliancePhone' => '',
+    'AlianceEmailId' => '', 'AliancePer' => '', 'FssaiNo' => '', 'OperationalFr' => '', 'ZomatoSwiggy' => '',
+    'ModelType' => '', 'UnderUser' => '', 'UnderByBdm' => '', 'OpenTime' => '', 'CloseTime' => '',
+    'AadharCard' => '', 'AadharCard2' => '', 'AadharNo' => '', 'PanNo' => '', 'PanCard' => '', 'PanCard2' => '',
+    'GstCertificate' => '', 'GumastaNo' => '', 'Gumasta' => '', 'MsmeNo' => '', 'Msme' => '',
+    'FoodLicence' => '', 'FoodLicenceReceipt' => '', 'AgreementCopy' => '', 'GstNo' => '',
+    'PrintCompName' => '', 'PrintMobNo' => '', 'terms_condition' => '', 'bottom_title' => '',
+    'AccountNo' => '', 'IfscCode' => '', 'AccountName' => '', 'BankName' => '', 'Branch' => '', 'UpiNo' => '',
+    'Status' => '1',
+];
+$row7 = array_merge($row7Defaults, is_array($row7) ? $row7 : []);
+$row7['ZomatoSwiggy'] = !empty($row7['ZomatoSwiggy']) ? explode(',', $row7['ZomatoSwiggy']) : [];
 
 $sql71 = "SELECT menu_ids,submenuid FROM tbl_users_bill WHERE id='$id'";
 $row71 = getRecord($sql71);
-$row71['menu_ids'] = explode(',', $row71['menu_ids']);
-$row71['submenuid'] = explode(',', $row71['submenuid']);
-if($_GET['id'] == ''){
+if (!$row71) {
+    $row71 = ['menu_ids' => '', 'submenuid' => ''];
+}
+$row71['menu_ids'] = !empty($row71['menu_ids']) ? explode(',', $row71['menu_ids']) : [];
+$row71['submenuid'] = !empty($row71['submenuid']) ? explode(',', $row71['submenuid']) : [];
+if($id == ''){
     $PrintCompName = "HAPPY SHOP";
     $PrintMobNo = "8007885000";
     $terms_condition = "Happy Journey Visit Again";
@@ -154,7 +175,7 @@ else{
     $bottom_title = $row7['bottom_title'];
 }
 
-if($_REQUEST["action"]=="deletelink")
+if($action == "deletelink")
 {
   $id = $_REQUEST["id"];
   $pid = $_REQUEST["leadid"];
@@ -171,14 +192,14 @@ if($_REQUEST["action"]=="deletelink")
                 <div class="layout-content">
 
                     <div class="container-fluid flex-grow-1 container-p-y">
-                        <h4 class="font-weight-bold py-3 mb-0"><?php if($_GET['id']) {?>Edit <?php } else{?> Add
+                        <h4 class="font-weight-bold py-3 mb-0"><?php if($id) {?>Edit <?php } else{?> Add
                             <?php } ?> Dealer Account</h4>
 
                         <div class="card mb-4">
                             <div class="card-body">
                                 <div id="alert_message"></div>
                                 <form id="validation-form" method="post" autocomplete="off">
-                                    <input type="hidden" name="id" value="<?php echo $_GET['id']; ?>" id="userid">
+                                    <input type="hidden" name="id" value="<?php echo $id; ?>" id="userid">
                                     <input type="hidden" name="action" value="Save" id="action">
                                       <fieldset>
  <legend>Dealer Detail</legend>
@@ -228,7 +249,7 @@ if($_REQUEST["action"]=="deletelink")
                                                     class="text-danger">*</span></label>
                                             <input type="text" name="Fname" id="Fname" class="form-control"
                                                 placeholder="" value="<?php echo $row7["Fname"]; ?>"
-                                                autocomplete="off">
+                                                autocomplete="off" required>
                                         </div>
                                         
                                         <div class="form-group col-md-3">
@@ -340,7 +361,7 @@ if($_REQUEST["action"]=="deletelink")
   
  <div class="form-group col-md-3">
     <label class="form-label">State <span class="text-danger">*</span></label>
-<select class="form-control" id="StateId" name="StateId" required="">
+<select class="form-control" id="StateId" name="StateId" required="" onchange="loadCity(this.value)">
 <option selected="" disabled="">Select State</option>
  <?php 
         $CountryId = $row7['CountryId'];
@@ -1129,18 +1150,54 @@ function getBankDetails(){
     });
 }
 
-    function getSubZone(zoneid){
-        var action = "getSubZone";
-    $.ajax({
-    url:"ajax_files/ajax_dropdown.php",
-    method:"POST",
-    data : {action:action,id:zoneid},
-    success:function(data)
-    {
-      $('#SubZoneId').html(data);
+    function loadCity(stateId, selectedCityId) {
+        if (!stateId) {
+            $('#CityId').html('<option value="" selected disabled>Select City</option>');
+            return;
+        }
+        $.ajax({
+            url: "ajax_files/ajax_dropdown.php",
+            method: "GET",
+            data: {
+                action: "getCity",
+                id: stateId
+            },
+            success: function(data) {
+                $('#CityId').html(data);
+                if (selectedCityId) {
+                    $('#CityId').val(selectedCityId);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("loadCity failed:", status, error, xhr.responseText);
+            }
+        });
     }
-    });
 
+    function getSubZone(zoneid, selectedSubZoneId) {
+        if (!zoneid) {
+            $('#SubZoneId').html('<option value="" selected disabled>Select</option>');
+            return;
+        }
+        $.ajax({
+            url: "ajax_files/ajax_dropdown.php",
+            method: "GET",
+            data: {
+                action: "getSubZone",
+                id: zoneid,
+                listtype: "form",
+                subzoneid: selectedSubZoneId || ''
+            },
+            success: function(data) {
+                $('#SubZoneId').html(data);
+                if (selectedSubZoneId) {
+                    $('#SubZoneId').val(selectedSubZoneId);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("getSubZone failed:", status, error, xhr.responseText);
+            }
+        });
     }
 function showDoc(val){
     if(val == 31){
@@ -1183,11 +1240,11 @@ $('.compdata').hide();
         }
     }
 
-    function error_toast() {
+    function error_toast(message) {
         var isRtl = $('body').attr('dir') === 'rtl' || $('html').attr('dir') === 'rtl';
         $.growl.error({
             title: 'Error',
-            message: 'Phone No Already Exists',
+            message: message || 'Phone No Already Exists',
             location: isRtl ? 'tl' : 'tr'
         });
     }
@@ -1221,12 +1278,12 @@ $('.compdata').hide();
             e.preventDefault();
             if ($('#validation-form').valid()) {
 
-                $.ajax({
-                    url: "ajax_files/ajax_customer_account.php",
-                    method: "POST",
-                    data: new FormData(this),
-                    contentType: false,
-                    processData: false,
+                var form = this;
+                var payload = $(form).serialize();
+                var ajaxOptions = {
+                    url: "ajax_files/ajax_customer_account.php?" + payload,
+                    method: "GET",
+                    cache: false,
                     beforeSend: function() {
                         $('#submit').attr('disabled', 'disabled');
                         $('#submit').text('Please Wait...');
@@ -1234,18 +1291,36 @@ $('.compdata').hide();
                     success: function(data) {
 console.log(data);$('#submit').attr('disabled', false);
                         $('#submit').text('Save');
-                        if (data == 0) {
-                            error_toast();
-
-                        } else {
+                        data = $.trim(String(data));
+                        if (data === '0') {
+                            error_toast('Phone No Already Exists');
+                        } else if (data === '2') {
+                            error_toast('Dealer Code Already Exists');
+                        } else if (data === '-1' || data === '') {
+                            error_toast('Save failed. Please fill Dealer Code, Shop Name and all required fields.');
+                        } else if (data === '-2') {
+                            error_toast('Form data not received by server. Please refresh the page and try again.');
+                        } else if (data === '-3') {
+                            error_toast('Dealer saved partially failed. Please contact support.');
+                        } else if (data === '1' || data.indexOf('1:') === 0) {
                             success_toast();
                             setTimeout(function() {
                                 window.location.href = 'view-franchises.php';
                             }, 2000);
+                        } else {
+                            error_toast('Unexpected server response. Record may not have been saved.');
                         }
                         
+                    },
+                    error: function(xhr, status, error) {
+                        $('#submit').attr('disabled', false);
+                        $('#submit').text('Save');
+                        console.error('Save AJAX error:', status, error, xhr.responseText);
+                        error_toast('Save failed. Server did not respond correctly.');
                     }
-                })
+                };
+
+                $.ajax(ajaxOptions)
 
 
 
@@ -1292,7 +1367,7 @@ console.log(data);$('#submit').attr('disabled', false);
    var action = "getState";
     $.ajax({
     url:"ajax_files/ajax_dropdown.php",
-    method:"POST",
+    method:"GET",
     data : {action:action,id:val},
     success:function(data)
     {
@@ -1303,19 +1378,20 @@ console.log(data);$('#submit').attr('disabled', false);
  });
 
          $(document).on("change", "#StateId", function(event){
-  var val = this.value;
-   var action = "getCity";
-    $.ajax({
-    url:"ajax_files/ajax_dropdown.php",
-    method:"POST",
-    data : {action:action,id:val},
-    success:function(data)
-    {
-      $('#CityId').html(data);
-    }
-    });
-
+  loadCity(this.value);
  });
+
+        var initialStateId = $('#StateId').val();
+        var initialCityId = $('#CityId').val();
+        if (initialStateId && $('#CityId option').length <= 1) {
+            loadCity(initialStateId, initialCityId);
+        }
+
+        var initialZoneId = $('#ZoneId').val();
+        var initialSubZoneId = $('#SubZoneId').val();
+        if (initialZoneId && $('#SubZoneId option').length <= 1) {
+            getSubZone(initialZoneId, initialSubZoneId);
+        }
     });
 
 

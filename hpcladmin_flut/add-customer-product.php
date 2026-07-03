@@ -37,11 +37,22 @@ $Page = "Products";
 <h4 class="font-weight-bold py-3 mb-0">Add Customer product</h4>
 
 <?php 
-$id = $_GET['id'];
+$id = $_GET['id'] ?? '';
 $sql7 = "SELECT * FROM tbl_cust_products2 WHERE id='$id'";
 $row7 = getRecord($sql7);
+if (!$row7) {
+    $row7 = [];
+}
+$row7 = array_merge([
+    'ProductName' => '', 'BrandId' => '', 'CatId' => '', 'SubCatId' => '',
+    'PurchasePrice' => '', 'SubTotal' => '', 'DiscPer' => '', 'Discount' => '',
+    'MinPrice' => '', 'CgstPer' => '', 'SgstPer' => '', 'IgstPer' => '',
+    'GstAmt' => '', 'ProdPrice' => '', 'CgstAmt' => '', 'SgstAmt' => '', 'IgstAmt' => '',
+    'Unit' => '', 'BarcodeNo' => '', 'MinQty' => '', 'Status' => '1',
+    'ProdType2' => '1', 'Transfer' => '1', 'SrNo' => '', 'Photo' => '',
+], $row7);
 ?>
-<form action="ajax_files/ajax_customer_products.php" method="POST" enctype="multipart/form-data" autocomplete="off">
+<form action="ajax_files/ajax_customer_products" method="POST" autocomplete="off">
     
 <!--<ul class="card px-4 pt-3 mb-3">
 <li>
@@ -81,9 +92,9 @@ Other Products
 <div class="mb-3">
 <div id="" class="card animated fadeIn">
 <div class="card-body">
-    <input type="hidden" name="action" value="Add">
+    <input type="hidden" name="form_action" value="Add">
     <input type="hidden" id="TempPrdId" name="TempPrdId" value="<?php echo rand(10000,99999);?>">
-    <input type="hidden" name="id" id="id" value="<?php echo $_GET['id']; ?>"/> 
+    <input type="hidden" name="id" id="id" value="<?php echo htmlspecialchars($id); ?>"/>
      <div class="form-row">
 <div class="form-group col-lg-5">
 <label class="form-label">Product Name<span class="text-danger">*</span></label>

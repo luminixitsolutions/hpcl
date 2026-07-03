@@ -54,7 +54,7 @@ if ($actionLower === 'login') {
 		exit;
 	}
 	$esc = $conn->real_escape_string($username);
-	$query = "SELECT * FROM tbl_users_bill WHERE Phone = '$esc' AND Roll IN (1,63,64,166) AND BillSoftFrId = 0";
+	$query = "SELECT * FROM tbl_users_bill WHERE Phone = '$esc' AND Roll IN (1,63,64,166,167) AND BillSoftFrId = 0";
 	$result = $conn->query($query);
 	if ($result === false) {
 		echo json_encode(array('Status' => 0));
@@ -88,7 +88,7 @@ if ($actionLower === 'login2') {
 	}
 	$escUser = $conn->real_escape_string($username);
 	$escPass = $conn->real_escape_string($password);
-	$query = "SELECT * FROM tbl_users_bill WHERE Phone = '$escUser' AND Password='$escPass' AND Roll IN (1,63,64) AND BillSoftFrId=0";
+	$query = "SELECT * FROM tbl_users_bill WHERE Phone = '$escUser' AND Password='$escPass' AND Roll IN (1,63,64,167) AND BillSoftFrId=0";
 	$rncnt = getRow($query);
 	if ($rncnt > 0) {
 		$row = getRecord($query);

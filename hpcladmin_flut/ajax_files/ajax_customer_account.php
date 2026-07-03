@@ -35,25 +35,136 @@ function handleUpload($field, $old = '', $uploadDir = '../../uploads/') {
 /**
  * Safe helper for POST read + escaping
  */
+$__requestData = null;
+
+function getRequestData() {
+    global $__requestData;
+    if ($__requestData !== null) {
+        return $__requestData;
+    }
+
+    $__requestData = $_POST;
+    if (!empty($__requestData)) {
+        return $__requestData;
+    }
+
+    $raw = file_get_contents('php://input');
+    if ($raw !== '') {
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (stripos($contentType, 'application/json') !== false) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $__requestData = $decoded;
+                return $__requestData;
+            }
+        }
+        $parsed = [];
+        parse_str($raw, $parsed);
+        if (!empty($parsed)) {
+            $__requestData = $parsed;
+            return $__requestData;
+        }
+    }
+
+    // Production fallback: POST body not received; form sent via GET query string
+    if (!empty($_GET) && (req('action', '') === 'Save' || isset($_GET['CustomerId']) || isset($_GET['ShopName']))) {
+        $__requestData = $_GET;
+        return $__requestData;
+    }
+
+    $__requestData = [];
+    return $__requestData;
+}
+
 function post($key) {
-    return isset($_POST[$key]) ? $_POST[$key] : '';
+    $data = getRequestData();
+    return isset($data[$key]) ? $data[$key] : '';
+}
+
+function postArray($key) {
+    $data = getRequestData();
+    // Support PHP array query keys: submenuid[] or submenuid
+    if (isset($data[$key])) {
+        return is_array($data[$key]) ? $data[$key] : [$data[$key]];
+    }
+    $bracketKey = $key . '[]';
+    if (isset($data[$bracketKey])) {
+        return is_array($data[$bracketKey]) ? $data[$bracketKey] : [$data[$bracketKey]];
+    }
+    return [];
 }
 function esc($conn, $value) {
     return mysqli_real_escape_string($conn, $value);
 }
 
-if ($_POST['action'] == 'Save') {
+function normalizePhone($phone) {
+    $digits = preg_replace('/\D/', '', (string) $phone);
+    if (strlen($digits) > 10) {
+        $digits = substr($digits, -10);
+    }
+    return $digits;
+}
+
+function dealerPhoneExists($conn, $phone, $excludeId = 0) {
+    $normalized = normalizePhone($phone);
+    if (strlen($normalized) < 10) {
+        return false;
+    }
+
+    $normalized = esc($conn, $normalized);
+    $excludeId = intval($excludeId);
+    $excludeSql = $excludeId > 0 ? " AND id != '$excludeId'" : '';
+
+    $sql = "SELECT id FROM tbl_users WHERE Roll=5 $excludeSql AND (
+        Phone = '$normalized'
+        OR Phone2 = '$normalized'
+        OR RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(Phone, ' ', ''), '-', ''), '+', ''), '.', ''), 10) = '$normalized'
+        OR RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(Phone2, ' ', ''), '-', ''), '+', ''), '.', ''), 10) = '$normalized'
+    ) LIMIT 1";
+
+    return getRow($sql) > 0;
+}
+
+function dealerCustomerIdExists($conn, $customerId, $excludeId = 0) {
+    $customerId = trim((string) $customerId);
+    if ($customerId === '') {
+        return false;
+    }
+
+    $customerId = esc($conn, $customerId);
+    $excludeId = intval($excludeId);
+    $excludeSql = $excludeId > 0 ? " AND id != '$excludeId'" : '';
+    $sql = "SELECT id FROM tbl_users WHERE Roll=5 AND CustomerId='$customerId' $excludeSql LIMIT 1";
+
+    return getRow($sql) > 0;
+}
+
+function saveResponse($code, $savedId = 0) {
+    header('Content-Type: text/plain; charset=UTF-8');
+    if ($code === 1 && $savedId > 0) {
+        echo '1:' . intval($savedId);
+        return;
+    }
+    echo (string) $code;
+}
+
+$action = req('action', '');
+
+if ($action === 'Save') {
 
     // collect variables (kept names same)
-    $id = post('id');
+    $id = trim(post('id'));
     $ColgId = esc($conn, trim(post("ColgId")));
     $CourseId = esc($conn, trim(post("CourseId")));
     $Fname = esc($conn, trim(post('Fname')));
+    if ($Fname === '') {
+        $Fname = esc($conn, trim(post('ShopName')));
+    }
     $Mname = esc($conn, trim(post('Mname')));
     $Lname = esc($conn, trim(post('Lname')));
     $Phone = esc($conn, trim(post('Phone')));
     $EmailId = esc($conn, post('EmailId'));
-    $Phone2 = post('Phone2');
+    $Phone2 = esc($conn, trim(post('Phone2')));
     $Password = esc($conn, trim(post('Password')));
     $CountryId = esc($conn, post('CountryId'));
     $StateId = esc($conn, post('StateId'));
@@ -71,6 +182,10 @@ if ($_POST['action'] == 'Save') {
     $Pincode = trim(post('Pincode'));
     $LeadId = trim(post('LeadId'));
     $Status = post('Status');
+    if ($Status === '' || $Status === null) {
+        $Status = '1';
+    }
+    $Status = esc($conn, $Status);
     $UserType = post('UserType');
     $Roll = post('Roll');
 
@@ -164,8 +279,8 @@ if ($_POST['action'] == 'Save') {
     $OpenTime = esc($conn, trim(post('OpenTime')));
     $CloseTime = esc($conn, trim(post('CloseTime')));
 
-    $OpenTime24  = date("H:i", strtotime($OpenTime));   // 14:30
-    $CloseTime24 = date("H:i", strtotime($CloseTime));  // 23:15
+    $OpenTime24 = !empty($OpenTime) ? date('H:i', strtotime($OpenTime)) : '';
+    $CloseTime24 = !empty($CloseTime) ? date('H:i', strtotime($CloseTime)) : '';
 
     $ModelType = esc($conn, trim(post('ModelType')));
 
@@ -174,8 +289,9 @@ if ($_POST['action'] == 'Save') {
     $GstNo = esc($conn, trim(post('GstNo')));
 
     // multi-select fields
-    if (!empty($_POST['ZomatoSwiggy'])) {
-        $ZomatoSwiggy = esc($conn, implode(",", $_POST['ZomatoSwiggy']));
+    $zomatoValues = postArray('ZomatoSwiggy');
+    if (!empty($zomatoValues)) {
+        $ZomatoSwiggy = esc($conn, implode(",", $zomatoValues));
     } else {
         $ZomatoSwiggy = 0;
     }
@@ -192,16 +308,29 @@ if ($_POST['action'] == 'Save') {
     $Gumasta = esc($conn, trim(post('Gumasta')));
     $Msme = esc($conn, trim(post('Msme')));
 
-    if (!empty($_POST['menu_ids'])) {
-        $menu_ids = esc($conn, implode(",", $_POST['menu_ids']));
+    $menuValues = postArray('menu_ids');
+    if (!empty($menuValues)) {
+        $menu_ids = esc($conn, implode(",", $menuValues));
     } else {
         $menu_ids = '1,2,3,5,6,8,9,10,11,12,13,14,17,18,19,20,21,22,26';
     }
 
-    if (!empty($_POST['submenuid'])) {
-        $submenuid = esc($conn, implode(",", $_POST['submenuid']));
+    $submenuValues = postArray('submenuid');
+    if (!empty($submenuValues)) {
+        $submenuid = esc($conn, implode(",", $submenuValues));
     } else {
         $submenuid ='5,6,13,14,8,10,11,12,15,22,37,38,1,2,21,3,4,19,20,29,32,33,23,24,25,26,27,28,34,35,31';
+    }
+
+    if (trim(post('CustomerId')) === '' && trim(post('ShopName')) === '') {
+        error_log('ajax_customer_account Save rejected: form data not received. Content-Type=' . ($_SERVER['CONTENT_TYPE'] ?? 'none'));
+        saveResponse(-2);
+        exit;
+    }
+
+    if (trim(post('CustomerId')) === '' || trim(post('ShopName')) === '') {
+        saveResponse(-1);
+        exit;
     }
 
     // handle uploads via helper (keeps existing fallback POST values)
@@ -220,12 +349,21 @@ if ($_POST['action'] == 'Save') {
         // begin transaction
         $conn->begin_transaction();
 
-        if ($id == '') {
-            // check duplicate phone for new insert
-            $sql2 = "SELECT * FROM tbl_users WHERE Phone='" . esc($conn, $Phone) . "' AND Roll=5";
-            $rncnt2 = getRow($sql2);
-            if ($rncnt2 > 0) {
-                echo 0;
+        if ($id === '' || $id === '0') {
+            if (dealerCustomerIdExists($conn, $CustomerId)) {
+                saveResponse(2);
+                $conn->rollback();
+                exit;
+            }
+
+            if (dealerPhoneExists($conn, $Phone)) {
+                saveResponse(0);
+                $conn->rollback();
+                exit;
+            }
+
+            if ($Phone2 !== '' && dealerPhoneExists($conn, $Phone2)) {
+                saveResponse(0);
                 $conn->rollback();
                 exit;
             }
@@ -259,7 +397,12 @@ if ($_POST['action'] == 'Save') {
                 modified_time='$modified_time',Location='$Location',Photo='$Photo'";
 
             $conn->query($sql);
-            $EmpId = mysqli_insert_id($conn);
+            $EmpId = intval(mysqli_insert_id($conn));
+            if ($EmpId <= 0) {
+                saveResponse(-1);
+                $conn->rollback();
+                exit;
+            }
 
             // insert customer address
             $sql3 = "INSERT INTO customer_address SET UserId='$EmpId',Fname='$Fname',Lname='$Lname',Phone='$Phone',
@@ -357,8 +500,12 @@ if ($_POST['action'] == 'Save') {
         "enabled_by_admin": true
     }
 }';
-                $sql3 = "INSERT INTO setup_configurations SET userid='$EmpId',config_json='$config_json',created_at='".date('Y-m-d H:i:s')."'";
-                $conn->query($sql3);
+                $sql3 = "INSERT INTO setup_configurations SET userid='$EmpId',config_json='" . esc($conn, $config_json) . "',created_at='" . date('Y-m-d H:i:s') . "'";
+                try {
+                    $conn->query($sql3);
+                } catch (Exception $setupEx) {
+                    error_log('setup_configurations insert skipped: ' . $setupEx->getMessage());
+                }
                 
 
             // Insert ledger record
@@ -367,18 +514,50 @@ if ($_POST['action'] == 'Save') {
             $conn->query($sql);
 
             // copy to tbl_users_bill (mirror)
-            $sql = "INSERT INTO tbl_users_bill SELECT * FROM `tbl_users` WHERE id='$EmpId'";
-            $conn->query($sql);
+            try {
+                $sql = "INSERT INTO tbl_users_bill SELECT * FROM `tbl_users` WHERE id='$EmpId'";
+                $conn->query($sql);
+                if ($conn->affected_rows <= 0) {
+                    throw new Exception('tbl_users_bill insert returned 0 rows');
+                }
+            } catch (Exception $billEx) {
+                error_log('tbl_users_bill insert failed for id ' . $EmpId . ': ' . $billEx->getMessage());
+                saveResponse(-3);
+                $conn->rollback();
+                exit;
+            }
 
             // commit transaction
             $conn->commit();
 
-            // send SMS (left commented as original)
-            // $smstxt = "Hello ".$Fname.", Thank you for registering ...";
-            echo 1;
+            saveResponse(1, $EmpId);
         } else {
             // UPDATE flow
-            // optionally check for duplicate phone on update (commented in original)
+            $existing = getRecord("SELECT id FROM tbl_users WHERE id='" . esc($conn, $id) . "' AND Roll=5 LIMIT 1");
+            if (!$existing) {
+                saveResponse(-1);
+                $conn->rollback();
+                exit;
+            }
+
+            if (dealerCustomerIdExists($conn, $CustomerId, $id)) {
+                saveResponse(2);
+                $conn->rollback();
+                exit;
+            }
+
+            if (dealerPhoneExists($conn, $Phone, $id)) {
+                saveResponse(0);
+                $conn->rollback();
+                exit;
+            }
+
+            if ($Phone2 !== '' && dealerPhoneExists($conn, $Phone2, $id)) {
+                saveResponse(0);
+                $conn->rollback();
+                exit;
+            }
+
             $sql = "UPDATE tbl_users SET CustomerId='$CustomerId',menu_ids='$menu_ids',submenuid='$submenuid',ModelType='$ModelType',
                 OpenTime='$OpenTime',CloseTime='$CloseTime',OpenTime24='$OpenTime24',CloseTime24='$CloseTime24',
                 UnderByBdm='$UnderByBdm',ZomatoSwiggy='$ZomatoSwiggy',OperationalFr='$OperationalFr',FssaiNo='$FssaiNo',
@@ -407,32 +586,14 @@ if ($_POST['action'] == 'Save') {
             $conn->query($sql);
 
             // update tbl_users_bill mirror
-            $sql = "UPDATE tbl_users_bill SET CustomerId='$CustomerId',menu_ids='$menu_ids',submenuid='$submenuid',ModelType='$ModelType',
-                OpenTime='$OpenTime',CloseTime='$CloseTime',OpenTime24='$OpenTime24',CloseTime24='$CloseTime24',
-                OperationalFr='$OperationalFr',FssaiNo='$FssaiNo',AlianceName='$AlianceName',AliancePhone='$AliancePhone',
-                AlianceEmailId='$AlianceEmailId',AliancePer='$AliancePer',Phone='$Phone',NewFr='$NewFr',
-                MenuId='$MenuId',PrintCompName='$PrintCompName',PrintMobNo='$PrintMobNo',terms_condition='$terms_condition',
-                bottom_title='$bottom_title',SubZoneId='$SubZoneId',FrDevCost='$FrDevCost',MonthlyRent='$MonthlyRent',
-                PumpName='$PumpName',SpacePartner='$SpacePartner',ZoneId='$ZoneId',OwnFranchise='$OwnFranchise',ShopName='$ShopName',
-                ExeId='$ExeId',SellAmt='$SellAmt',SellDate='$SellDate',Barcode='',
-                Roll=5,SchemeId='$SchemeId',ColgId='$ColgId',Fname='$Fname',Mname='$Mname',Lname='$Lname',EmailId='$EmailId',
-                Phone2='$Phone2',Password='$Password',CountryId='$CountryId',StateId='$StateId',CityId='$CityId',Address='$Address',
-                Pincode='$Pincode',Status='$Status',BranchId='$BranchId',ModifiedDate='$CreatedDate',ModifiedBy='$user_id',Dob='$Dob',
-                Area='$Area',UserType='$UserType',UnderUser='$UnderUser',ProjectType='$ProjectType',BeneficiaryId='$BeneficiaryId',
-                Taluka='$Taluka',Village='$Village',District='$District',PumpCapacity='$PumpCapacity',RooftopPlantCapacity='$RooftopPlantCapacity',
-                Lattitude='$Lattitude',Longitude='$Longitude',OffOnGrid='$OffOnGrid',SanctionLoad='$SanctionLoad',LoadExtension='$LoadExtension',
-                WaterSource='$WaterSource',SummerDepth='$SummerDepth',WinterDepth='$WinterDepth',PumpHead='$PumpHead',BgNumber='$BgNumber',
-                BgValidity='$BgValidity',BgClaimPeriod='$BgClaimPeriod',InsuranceNumber='$InsuranceNumber',InsuranceAgency='$InsuranceAgency',
-                InsuranceValidity='$InsuranceValidity',InstallationVendor='$InstallationVendor',PumpHeadSelect='$PumpHeadSelect',
-                AcDc='$AcDc',Surface='$Surface',AadharCard='$AadharCard',AadharCard2='$AadharCard2',PanCard='$PanCard',PanCard2='$PanCard2',
-                AadharNo='$AadharNo',PanNo='$PanNo',GstCertificate='$GstCertificate',GstNo='$GstNo',AccountName='$AccountName',
-                BankName='$BankName',AccountNo='$AccountNo',IfscCode='$IfscCode',Branch='$Branch',UpiNo='$UpiNo',GumastaNo='$GumastaNo',
-                Gumasta='$Gumasta',MsmeNo='$MsmeNo',Msme='$Msme',
-                InspectionDate='$InspectionDate',CommissioningDate='$CommissioningDate',CustType='$CustType',BoreDia='$BoreDia',
-                CompName='$CompName',CompAddress='$CompAddress',CompPhone='$CompPhone',AuthorName='$AuthorName',CompId='$CompId',
-                Options='$Options',FoodLicence='$FoodLicence',FoodLicenceReceipt='$FoodLicenceReceipt',AgreementCopy='$AgreementCopy',
-                modified_time='$modified_time',Location='$Location',Photo='$Photo' WHERE id='$id'";
+            $conn->query("DELETE FROM tbl_users_bill WHERE id='$id'");
+            $sql = "INSERT INTO tbl_users_bill SELECT * FROM `tbl_users` WHERE id='$id'";
             $conn->query($sql);
+            if ($conn->affected_rows <= 0) {
+                saveResponse(-1);
+                $conn->rollback();
+                exit;
+            }
 
             // update customer address
             $sql3 = "UPDATE customer_address SET Fname='$Fname',Lname='$Lname',Phone='$Phone',
@@ -449,23 +610,22 @@ if ($_POST['action'] == 'Save') {
             $conn->query($sql);
 
             $conn->commit();
-            echo 1;
+            saveResponse(1, intval($id));
         }
     } catch (Exception $e) {
         // rollback and return error (log as needed)
         if ($conn->in_transaction) {
             $conn->rollback();
         }
-        // For debugging you can uncomment the next line during development:
-        // error_log('Save error: ' . $e->getMessage());
-        echo 0;
+        error_log('ajax_customer_account Save error: ' . $e->getMessage());
+        saveResponse(-1);
         exit;
     }
     exit;
 }
 
 // other AJAX actions - keep behavior same but no change in logic except small safety improvements
-if ($_POST['action'] == 'deletePhoto') {
+if (req('action', '') == 'deletePhoto') {
     $id = intval($_POST['id']);
     $Photo = esc($conn, $_POST['Photo']);
     $q = "UPDATE tbl_users SET Photo='' WHERE id=$id";

@@ -91,9 +91,9 @@ if ($long !== '') {
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "delete")
 {
-  $id = $_REQUEST["id"];
+  $id = $_REQUEST["id"] ?? '';
   $sql11 = "DELETE FROM tbl_users WHERE id = '$id' AND Roll=5";
   $conn->query($sql11);
   $sql11 = "DELETE FROM tbl_users_bill WHERE id = '$id' AND Roll=5";
@@ -137,7 +137,7 @@ if($_REQUEST["action"]=="delete")
   $row12 = getList($sql12);
   foreach($row12 as $result){
      ?>
-  <option <?php if($_POST["OwnFranchise"] == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
+  <option <?php if(($_POST["OwnFranchise"] ?? '') == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
     <?php echo $result['Name']; ?></option>
 <?php } ?>
                                                      
@@ -152,7 +152,7 @@ if($_REQUEST["action"]=="delete")
                                                 <?php $sql = "SELECT * FROM tbl_zone WHERE Status=1";
                                                     $row = getList($sql);
                                                     foreach($row as $result){?>
-                                                <option value="<?php echo $result['id'];?>" <?php if($_POST["ZoneId"]==$result['id']) {?> selected
+                                                <option value="<?php echo $result['id'];?>" <?php if(($_POST["ZoneId"] ?? '') == $result['id']) {?> selected
                                                     <?php } ?>><?php echo $result['Name'];?></option>
                                                 <?php } ?>
                                                   
@@ -162,11 +162,11 @@ if($_REQUEST["action"]=="delete")
                                         
 <div class="form-group col-md-2">
 <label class="form-label">From Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_POST['FromDate'] ?>" autocomplete="off">
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo htmlspecialchars($_POST['FromDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_POST['ToDate'] ?>" autocomplete="off">
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo htmlspecialchars($_POST['ToDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
 <input type="hidden" name="Search" value="Search">
 <div class="form-group col-md-1" style="padding-top:20px;">

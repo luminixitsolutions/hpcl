@@ -37,7 +37,7 @@ $qx = "INSERT INTO tbl_fr_model SET Name = '$Name',Status='$Status'";
 }
 }
 
-if($_POST['action'] == 'fetch_record'){
+if ($action === 'fetch_record'){
  $id = $_POST['id'];
     $query = "SELECT * FROM tbl_fr_model WHERE id = '$id'";
     $result = $conn->query($query);
@@ -84,7 +84,7 @@ else{
   echo 1;
 }
 
-  if($_POST['action'] == 'delete') {
+  if ($action === 'delete') {
    
       $id = $_POST['id'];
        $query2 = "SELECT Photo FROM tbl_fr_model WHERE id = '$id'";

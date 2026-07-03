@@ -2,9 +2,20 @@
 header('Content-Type: application/json; charset=utf-8');
 include '../config.php';
 
+function ensureBatchNoColumn($conn) {
+    $tables = ['tbl_cust_prod_stock_2025', 'tbl_cust_prod_stock_2025_backup'];
+    foreach ($tables as $table) {
+        $result = $conn->query("SHOW COLUMNS FROM `$table` LIKE 'BatchNo'");
+        if ($result && $result->num_rows === 0) {
+            $conn->query("ALTER TABLE `$table` ADD COLUMN `BatchNo` varchar(100) DEFAULT NULL AFTER `ExpDate`");
+        }
+    }
+}
+
 try {
     // Start session and database transaction
     session_start();
+    ensureBatchNoColumn($conn);
     $conn->begin_transaction();
 
     // Get logged-in user details
@@ -36,6 +47,8 @@ try {
         $Qty = addslashes(trim($p['qty']));
         $PurchasePrice = addslashes(trim($p['price']));
         $SellPrice = addslashes(trim($p['price'])); // optional: you can change if you have different field
+        $BatchNo = addslashes(trim($p['batchNo'] ?? ''));
+        $ExpDate = addslashes(trim($p['expDate'] ?? ''));
         $StockDate = $CreatedDate;
         $Narration = "Stock Added via Manage Stock Page";
         $VedId = "0"; // optional: modify as needed
@@ -54,6 +67,8 @@ try {
                         FrId='$BillSoftFrId',
                         PurchasePrice='$PurchasePrice',
                         SellPrice='$SellPrice',
+                        BatchNo='$BatchNo',
+                        ExpDate=" . ($ExpDate !== '' ? "'$ExpDate'" : "NULL") . ",
                         VedId='$VedId'";
         if (!$conn->query($sql1)) {
             throw new Exception("Error inserting stock: " . $conn->error);
@@ -75,6 +90,8 @@ try {
                         FrId='$BillSoftFrId',
                         PurchasePrice='$PurchasePrice',
                         SellPrice='$SellPrice',
+                        BatchNo='$BatchNo',
+                        ExpDate=" . ($ExpDate !== '' ? "'$ExpDate'" : "NULL") . ",
                         orgstockid='$InvId',
                         VedId='$VedId'";
         if (!$conn->query($sql2)) {

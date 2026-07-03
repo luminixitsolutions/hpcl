@@ -253,6 +253,8 @@ $(document).ready(function(){
                 if (res.Status == 1) {
                     if (res.roll == 166) {
                         window.location.href = '../distadmin/dashboard-new.php';
+                    } else if (res.roll == 167) {
+                        window.location.href = 'dashboard.php';
                     } else {
                         window.location.href = 'dashboard-new.php';
                     }

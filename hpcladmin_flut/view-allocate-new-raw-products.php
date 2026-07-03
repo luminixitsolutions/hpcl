@@ -5,6 +5,10 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Raw-Products";
 $Page = "Allocate-Raw-Products";
+$filterOwnFranchise = $_REQUEST['OwnFranchise'] ?? 'all';
+$filterFromDate = $_REQUEST['FromDate'] ?? '';
+$filterToDate = $_REQUEST['ToDate'] ?? '';
+$filterSearch = $_REQUEST['Search'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
@@ -58,7 +62,7 @@ $Page = "Allocate-Raw-Products";
   $row12 = getList($sql12);
   foreach($row12 as $result){
      ?>
-  <option <?php if($_POST["OwnFranchise"] == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
+  <option <?php if($filterOwnFranchise == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
     <?php echo $result['Name']; ?></option>
 <?php } ?>
                                                      
@@ -69,17 +73,17 @@ $Page = "Allocate-Raw-Products";
 
 <div class="form-group col-md-3">
 <label class="form-label">From Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_POST['FromDate'] ?>" autocomplete="off">
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo htmlspecialchars($filterFromDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
 <div class="form-group col-md-3">
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_POST['ToDate'] ?>" autocomplete="off">
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo htmlspecialchars($filterToDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
 <input type="hidden" name="Search" value="Search">
 <div class="form-group col-md-1" style="padding-top:20px;">
 <button type="submit" name="submit" class="btn btn-primary btn-finish">Search</button>
 </div>
-<?php if(isset($_POST['Search'])) {?>
+<?php if($filterSearch !== '') {?>
 <div class="form-group col-md-1">
 <label class="form-label">&nbsp;</label>
 <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
@@ -124,21 +128,16 @@ function franchiseBadge($code) {
            
             $sql = "SELECT tu.*,tut.Name As User_Type FROM tbl_users_bill tu LEFT JOIN tbl_user_type tut ON tu.UserType=tut.id WHERE tu.Roll=5 ";
        
-            if($_POST['OwnFranchise']){
-                $OwnFranchise = $_POST['OwnFranchise'];
-                if($OwnFranchise == 'all'){
-                    $sql.= " ";
-                }
-                else{
+            if(!empty($filterOwnFranchise) && $filterOwnFranchise !== 'all'){
+                $OwnFranchise = $filterOwnFranchise;
                 $sql.= " AND tu.OwnFranchise='$OwnFranchise'";
-                }
             }
-            if($_POST['FromDate']){
-                $FromDate = $_POST['FromDate'];
+            if(!empty($filterFromDate)){
+                $FromDate = $filterFromDate;
                 $sql.= " AND tu.CreatedDate>='$FromDate'";
             }
-            if($_POST['ToDate']){
-                $ToDate = $_POST['ToDate'];
+            if(!empty($filterToDate)){
+                $ToDate = $filterToDate;
                 $sql.= " AND tu.CreatedDate<='$ToDate'";
             }
             $sql.= " ORDER BY tu.id DESC";

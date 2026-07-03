@@ -3,8 +3,22 @@ session_start();
 include_once 'config.php';
 include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
-$MainPage = "Report";
+$MainPage = "Top-Sell-Dashboard";
 $Page = "Daily-Sale-Report-2";
+$filterFrId = $_REQUEST['FrId'] ?? 'all';
+$filterZoneId = $_REQUEST['ZoneId'] ?? 'all';
+$filterSubZoneId = $_REQUEST['SubZoneId'] ?? 'all';
+$filterFromDate = $_REQUEST['FromDate'] ?? '';
+$filterToDate = $_REQUEST['ToDate'] ?? '';
+$filterQtyType = $_REQUEST['QtyType'] ?? '0';
+$filterProdType2 = $_REQUEST['ProdType2'] ?? 'all';
+$filterSearch = $_REQUEST['Search'] ?? '';
+$adminRow = $_SESSION['Admin'] ?? [];
+$shopAdminDealerIds = shopAdminDealerIds($adminRow);
+$shopAdminDealerSql = '';
+if (!empty($shopAdminDealerIds)) {
+    $shopAdminDealerSql = ' AND id IN (' . implode(',', $shopAdminDealerIds) . ')';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
@@ -65,10 +79,10 @@ $Page = "Daily-Sale-Report-2";
                                             <label class="form-label">Franchise </label>
                                             <select class="select2-demo form-control" id="FrId" name="FrId" required="">
                                                 <option selected=""  value="all">All</option>
-                                                <?php $sql = "SELECT id,ShopName FROM tbl_users_bill WHERE Roll = 5 AND Status = 1";
+                                                <?php $sql = "SELECT id,ShopName FROM tbl_users_bill WHERE Roll = 5 AND Status = 1" . $shopAdminDealerSql;
                                                     $row = getList($sql);
                                                     foreach($row as $result){?>
-                                                <option value="<?php echo $result['id'];?>" <?php if($_POST["FrId"]==$result['id']) {?> selected
+                                                <option value="<?php echo $result['id'];?>" <?php if($filterFrId == $result['id']) {?> selected
                                                     <?php } ?>><?php echo $result['ShopName'];?></option>
                                                 <?php } ?>
                                                   
@@ -80,10 +94,15 @@ $Page = "Daily-Sale-Report-2";
                                             <label class="form-label">Zone </label>
                                             <select class="form-control" id="ZoneId" name="ZoneId" >
                                                 <option selected=""  value="all">All</option>
-                                                <?php $sql = "SELECT * FROM tbl_zone WHERE Status=1";
-                                                    $row = getList($sql);
+                                                <?php
+                                                    $zoneSql = "SELECT * FROM tbl_zone WHERE Status=1";
+                                                    $allowedZones = shopAdminZoneIds($adminRow);
+                                                    if (!empty($allowedZones)) {
+                                                        $zoneSql = "SELECT * FROM tbl_zone WHERE Status=1 AND id IN (" . implode(',', $allowedZones) . ")";
+                                                    }
+                                                    $row = getList($zoneSql);
                                                     foreach($row as $result){?>
-                                                <option value="<?php echo $result['id'];?>" <?php if($_POST["ZoneId"]==$result['id']) {?> selected
+                                                <option value="<?php echo $result['id'];?>" <?php if($filterZoneId == $result['id']) {?> selected
                                                     <?php } ?>><?php echo $result['Name'];?></option>
                                                 <?php } ?>
                                                   
@@ -96,10 +115,15 @@ $Page = "Daily-Sale-Report-2";
                                             <label class="form-label">Sub Zone </label>
                                             <select class="form-control" id="SubZoneId" name="SubZoneId" >
                                                 <option selected=""  value="all">All</option>
-                                                <?php $sql = "SELECT * FROM tbl_sub_zone WHERE Status=1";
-                                                    $row = getList($sql);
+                                                <?php
+                                                    $subZoneSql = "SELECT * FROM tbl_sub_zone WHERE Status=1";
+                                                    $allowedSubZones = shopAdminSubZoneIds($adminRow);
+                                                    if (!empty($allowedSubZones)) {
+                                                        $subZoneSql = "SELECT * FROM tbl_sub_zone WHERE Status=1 AND id IN (" . implode(',', $allowedSubZones) . ")";
+                                                    }
+                                                    $row = getList($subZoneSql);
                                                     foreach($row as $result){?>
-                                                <option value="<?php echo $result['id'];?>" <?php if($_POST["SubZoneId"]==$result['id']) {?> selected
+                                                <option value="<?php echo $result['id'];?>" <?php if($filterSubZoneId == $result['id']) {?> selected
                                                     <?php } ?>><?php echo $result['Name'];?></option>
                                                 <?php } ?>
                                                   
@@ -109,26 +133,26 @@ $Page = "Daily-Sale-Report-2";
                                         
 <div class="form-group col-md-2">
 <label class="form-label">From Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_REQUEST['FromDate'] ?>" autocomplete="off" required>
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo htmlspecialchars($filterFromDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" required>
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_REQUEST['ToDate'] ?>" autocomplete="off" required>
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo htmlspecialchars($filterToDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" required>
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">Show Qty</label>
 <select class="form-control" name="QtyType">
-    <option value="0" <?php if($_REQUEST['QtyType'] == 0){?> selected <?php } ?>>All</option>
-    <option value="1" <?php if($_REQUEST['QtyType'] == 1){?> selected <?php } ?>>Zero</option>
-    <option  value="2" <?php if($_REQUEST['QtyType'] == 2){?> selected <?php } ?>>Non-Zero</option>
+    <option value="0" <?php if($filterQtyType == 0 || $filterQtyType === '0'){?> selected <?php } ?>>All</option>
+    <option value="1" <?php if($filterQtyType == 1 || $filterQtyType === '1'){?> selected <?php } ?>>Zero</option>
+    <option  value="2" <?php if($filterQtyType == 2 || $filterQtyType === '2'){?> selected <?php } ?>>Non-Zero</option>
 </select>
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">Product Type</label>
 <select class="form-control" name="ProdType2">
       <option value="all" selected>All</option>
-    <option value="1" <?php if($_REQUEST['ProdType2'] == 1){?> selected <?php } ?>>MRP</option>
-    <option value="2" <?php if($_REQUEST['ProdType2'] == 2){?> selected <?php } ?>>Making</option>
+    <option value="1" <?php if($filterProdType2 == 1 || $filterProdType2 === '1'){?> selected <?php } ?>>MRP</option>
+    <option value="2" <?php if($filterProdType2 == 2 || $filterProdType2 === '2'){?> selected <?php } ?>>Making</option>
    
 </select>
 </div>
@@ -137,7 +161,7 @@ $Page = "Daily-Sale-Report-2";
     <label class="form-label">&nbsp;</label>
 <button type="submit" name="submit" class="btn btn-primary btn-finish">Search</button>
 </div>
-<?php if(isset($_REQUEST['Search'])) {?>
+<?php if($filterSearch !== '') {?>
 <div class="form-group col-md-1">
 <label class="form-label">&nbsp;</label>
 <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
@@ -150,7 +174,7 @@ $Page = "Daily-Sale-Report-2";
                                         </div>
                                     </div>
    </div>
-   <?php if($_REQUEST['Search']=='Search') {?>
+   <?php if($filterSearch === 'Search') {?>
 <div class="card-datatable table-responsive">
 
 
@@ -170,13 +194,13 @@ $Page = "Daily-Sale-Report-2";
     </thead>
     <tbody>
         <?php
-$FromDate = $_REQUEST['FromDate'];
-$ToDate   = $_REQUEST['ToDate'];
-$FrId     = $_REQUEST['FrId'] ?? 'all';
-$ZoneId   = $_REQUEST['ZoneId'] ?? 'all';
-$SubZoneId= $_REQUEST['SubZoneId'] ?? 'all';
-$ProdType2= $_REQUEST['ProdType2'] ?? 'all';
-$QtyType  = $_REQUEST['QtyType'] ?? 0;
+$FromDate = $filterFromDate;
+$ToDate   = $filterToDate;
+$FrId     = $filterFrId;
+$ZoneId   = $filterZoneId;
+$SubZoneId= $filterSubZoneId;
+$ProdType2= $filterProdType2;
+$QtyType  = (int)$filterQtyType;
 
 // Build product + invoice join query
 $sql = "
@@ -185,8 +209,8 @@ $sql = "
         z.Name AS Zone,
         sz.Name AS SubZone,
         p.ProductName,
-        p.PurchasePrice,
-        p.MinPrice,
+        MAX(p.PurchasePrice) AS PurchasePrice,
+        MAX(p.MinPrice) AS MinPrice,
         DATE_FORMAT(tci.InvoiceDate, '%b %Y') AS SaleMonth,
         SUM(tcid.Qty) AS TotalQty,
         SUM(tcid.Total) AS TotalSale
@@ -201,6 +225,7 @@ $sql = "
 
 // Filters
 if ($FrId !== 'all')       $sql .= " AND u.id = '$FrId'";
+if (!empty($shopAdminDealerIds)) $sql .= " AND u.id IN (" . implode(',', $shopAdminDealerIds) . ")";
 if ($ZoneId !== 'all')     $sql .= " AND u.ZoneId = '$ZoneId'";
 if ($SubZoneId !== 'all')  $sql .= " AND u.SubZoneId = '$SubZoneId'";
 if ($ProdType2 !== 'all')  $sql .= " AND p.ProdType2 = '$ProdType2'";
@@ -209,7 +234,7 @@ if (!empty($ToDate))       $sql .= " AND tci.InvoiceDate <= '$ToDate'";
 
 // Grouping & Sorting
 $sql .= "
-    GROUP BY u.ShopName, z.Name, sz.Name, p.ProductName, SaleMonth
+    GROUP BY u.ShopName, z.Name, sz.Name, p.ProductName, DATE_FORMAT(tci.InvoiceDate, '%b %Y')
     ORDER BY p.ProductName, MIN(tci.InvoiceDate)
 ";
 
@@ -223,11 +248,11 @@ $rows = getList($sql);
             <td><?= $r['Zone'] ?></td>
             <td><?= $r['SubZone'] ?></td>
             <td><?= $r['ProductName'] ?></td>
-            <td>₹<?= number_format($r['PurchasePrice'],2) ?></td>
-            <td>₹<?= number_format($r['MinPrice'],2) ?></td>
+            <td>₹<?= number_format((float)($r['PurchasePrice'] ?? 0), 2) ?></td>
+            <td>₹<?= number_format((float)($r['MinPrice'] ?? 0), 2) ?></td>
             <td><?= $r['SaleMonth'] ?></td>
             <td><?= $r['TotalQty'] ?></td>
-            <td>₹<?= number_format($r['TotalSale'],2) ?></td>
+            <td>₹<?= number_format((float)($r['TotalSale'] ?? 0), 2) ?></td>
         </tr>
         <?php }} ?>
     </tbody>
@@ -309,9 +334,9 @@ $(document).ready(function() {
                     // Custom headings
                     var title1    = AddRow(1, [{ cell: 'A', text: 'Maha Chai Pvt. Ltd.' }]);
                     var title2    = AddRow(2, [{ cell: 'A', text: 'Monthly Wise Sale Report' }]);
-                    var zone      = AddRow(3, [{ cell: 'A', text: 'Zone: <?= ($_POST["ZoneId"]=="all" ? "All" : $_POST["ZoneId"]); ?>' }]);
-                    var franchise = AddRow(4, [{ cell: 'A', text: 'Franchise: <?= ($_POST["FrId"]=="all" ? "All" : $_POST["FrId"]); ?>' }]);
-                    var period    = AddRow(5, [{ cell: 'A', text: 'Period: <?= !empty($_POST["FromDate"]) ? date("d/m/Y", strtotime($_POST["FromDate"])) : ""; ?> to <?= !empty($_POST["ToDate"]) ? date("d/m/Y", strtotime($_POST["ToDate"])) : ""; ?>' }]);
+                    var zone      = AddRow(3, [{ cell: 'A', text: 'Zone: <?= ($filterZoneId == "all" ? "All" : $filterZoneId); ?>' }]);
+                    var franchise = AddRow(4, [{ cell: 'A', text: 'Franchise: <?= ($filterFrId == "all" ? "All" : $filterFrId); ?>' }]);
+                    var period    = AddRow(5, [{ cell: 'A', text: 'Period: <?= !empty($filterFromDate) ? date("d/m/Y", strtotime($filterFromDate)) : ""; ?> to <?= !empty($filterToDate) ? date("d/m/Y", strtotime($filterToDate)) : ""; ?>' }]);
                     var generated = AddRow(6, [{ cell: 'A', text: 'Generated on: <?= date("d/m/Y h:i A"); ?>' }]);
                     var blankRow  = AddRow(7, [{ cell: 'A', text: '' }]);
 

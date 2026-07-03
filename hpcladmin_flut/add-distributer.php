@@ -5,12 +5,13 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Production";
 $Page = "View-Production";
+$id = $_GET['id'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
 
 <head>
-    <title><?php echo $Proj_Title; ?> - <?php if($_GET['id']) {?>Edit <?php } else{?> Add <?php } ?> Production Account
+    <title><?php echo $Proj_Title; ?> - <?php if($id) {?>Edit <?php } else{?> Add <?php } ?> Production Account
     </title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -71,23 +72,32 @@ $Page = "View-Production";
                 
 
                 <?php 
-$id = $_GET['id'];
-$sql7 = "SELECT * FROM tbl_users_bill WHERE id='$id'";
-$row7 = getRecord($sql7);
-$row7['AssignPincode'] = explode(',', $row7['AssignPincode']);
+if ($id !== '') {
+    $sql7 = "SELECT * FROM tbl_users_bill WHERE id='$id'";
+    $row7 = getRecord($sql7);
+} else {
+    $row7 = [];
+}
+$row7Defaults = [
+    'ZoneId' => '', 'VedId' => '', 'Fname' => '', 'CountryId' => '', 'StateId' => '',
+    'CityId' => '', 'Pincode' => '', 'Address' => '', 'AssignPincode' => '',
+    'Phone' => '', 'Phone2' => '', 'EmailId' => '', 'Photo' => '', 'Status' => '1',
+];
+$row7 = array_merge($row7Defaults, is_array($row7) ? $row7 : []);
+$row7['AssignPincode'] = !empty($row7['AssignPincode']) ? explode(',', $row7['AssignPincode']) : [];
 ?>
 
                 <div class="layout-content">
 
                     <div class="container-fluid flex-grow-1 container-p-y">
-                        <h4 class="font-weight-bold py-3 mb-0"><?php if($_GET['id']) {?>Edit <?php } else{?> Add
+                        <h4 class="font-weight-bold py-3 mb-0"><?php if($id) {?>Edit <?php } else{?> Add
                             <?php } ?> Distributer Account</h4>
 
                         <div class="card mb-4">
                             <div class="card-body">
                                 <div id="alert_message"></div>
                                 <form id="validation-form" method="post" autocomplete="off" action="ajax_files/ajax_distributer.php" enctype="multipart/form-data">
-                                    <input type="hidden" name="id" value="<?php echo $_GET['id']; ?>" id="userid">
+                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" id="userid">
                                     <input type="hidden" name="action" value="Save" id="action">
                                      <fieldset>
  <legend>Personal Detail</legend>
@@ -152,7 +162,8 @@ $row7['AssignPincode'] = explode(',', $row7['AssignPincode']);
                                             <select class="form-control" id="StateId" name="StateId" required>
                                                 <option selected="" disabled="">Select State</option>
                                                 <?php 
-        $CountryId = $row7['CountryId'];
+        $CountryId = $row7['CountryId'] ?? '';
+        if ($CountryId !== '') {
         $q = "select * from tbl_state WHERE CountryId='$CountryId' ORDER BY Name ASC";
         $r = $conn->query($q);
         while($rw = $r->fetch_assoc())
@@ -160,7 +171,8 @@ $row7['AssignPincode'] = explode(',', $row7['AssignPincode']);
 ?>
                                                 <option <?php if($row7['StateId']==$rw['id']){ ?> selected <?php } ?>
                                                     value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-                                                <?php } ?>
+                                                <?php }
+        } ?>
                                             </select>
                                         </div>
                                         <div class="form-group col-md-3">
@@ -168,7 +180,8 @@ $row7['AssignPincode'] = explode(',', $row7['AssignPincode']);
                                             <select class="form-control" id="CityId" name="CityId" required>
                                                 <option selected="" disabled="">Select City</option>
                                                 <?php 
- $StateId = $row7['StateId'];
+ $StateId = $row7['StateId'] ?? '';
+        if ($StateId !== '') {
         $q = "select * from tbl_city WHERE StateId='$StateId' ORDER BY Name ASC";
         $r = $conn->query($q);
         while($rw = $r->fetch_assoc())
@@ -176,7 +189,8 @@ $row7['AssignPincode'] = explode(',', $row7['AssignPincode']);
 ?>
                                                 <option <?php if($row7['CityId']==$rw['id']){ ?> selected <?php } ?>
                                                     value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-                                                <?php } ?>
+                                                <?php }
+        } ?>
                                             </select>
                                         </div>
 
@@ -466,12 +480,11 @@ $(document).ready(function(){
     $(document).ready(function() {
         //$(document).on("click", ".btn-finish", function(event){
         $('#validation-form').on('submit', function(e) {
-            exit();
             e.preventDefault();
             if ($('#validation-form').valid()) {
 
                 $.ajax({
-                    url: "ajax_files/ajax_employee.php",
+                    url: "ajax_files/ajax_distributer.php",
                     method: "POST",
                     data: new FormData(this),
                     contentType: false,
@@ -488,7 +501,7 @@ $(document).ready(function(){
                         } else {
                             success_toast();
                             setTimeout(function() {
-                                window.location.href = 'view-employee.php';
+                                window.location.href = 'view-distributers.php';
                             }, 2000);
                         }
                         $('#submit').attr('disabled', false);
@@ -511,7 +524,7 @@ $(document).ready(function(){
                 var id = $('#userid').val();
                 var Photo = $('#OldPhoto').val();
                 $.ajax({
-                    url: "ajax_files/ajax_employee.php",
+                    url: "ajax_files/ajax_distributer.php",
                     method: "POST",
                     data: {
                         action: action,

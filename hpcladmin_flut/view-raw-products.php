@@ -31,9 +31,9 @@ $Page = "View-Raw-Products";
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if(isset($_REQUEST['action']) && $_REQUEST['action'] == 'delete')
 {
-  $id = $_REQUEST["id"];
+  $id = $_REQUEST['id'] ?? '';
   $sql11 = "DELETE FROM tbl_cust_products2 WHERE id = '$id'";
   $conn->query($sql11);
   $sql11 = "DELETE FROM tbl_raw_prod_make_qty_2025 WHERE RawProdId = '$id'";

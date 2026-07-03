@@ -37,6 +37,16 @@ if ($incomingCal !== '') {
     }
 }
 
+if (!isset($_REQUEST['calendar']) || $_REQUEST['calendar'] === '') {
+    $_REQUEST['calendar'] = 'Today';
+}
+if (!isset($_REQUEST['FromDate'])) {
+    $_REQUEST['FromDate'] = '';
+}
+if (!isset($_REQUEST['ToDate'])) {
+    $_REQUEST['ToDate'] = '';
+}
+
 $report_filter_clear_params = $_GET;
 $report_filter_clear_params['clear_report_filter'] = '1';
 $report_filter_clear_url = htmlspecialchars(

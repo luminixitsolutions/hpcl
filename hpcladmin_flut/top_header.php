@@ -23,6 +23,11 @@ $sql11 = "SELECT * FROM tbl_users_bill WHERE id='$uid'";
 $row = getRecord($sql11);
 $_SESSION['Admin'] = $row;
 }
+
+$lat = $_GET['lat'] ?? ($_SESSION['Admin']['lat'] ?? '');
+$long = $_GET['lng'] ?? ($_SESSION['Admin']['lng'] ?? '');
+$navUserId = $_GET['user_id'] ?? '';
+$displayUserId = $navUserId !== '' ? $navUserId : ($user_id ?? '');
  ?>
  
  <script>

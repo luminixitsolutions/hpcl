@@ -420,12 +420,11 @@ $row7['Options'] = explode(',', $row7['Options']);
     $(document).ready(function() {
         //$(document).on("click", ".btn-finish", function(event){
         $('#validation-form').on('submit', function(e) {
-            exit();
             e.preventDefault();
             if ($('#validation-form').valid()) {
 
                 $.ajax({
-                    url: "ajax_files/ajax_employee.php",
+                    url: "ajax_files/ajax_kitchen.php",
                     method: "POST",
                     data: new FormData(this),
                     contentType: false,
@@ -442,7 +441,7 @@ $row7['Options'] = explode(',', $row7['Options']);
                         } else {
                             success_toast();
                             setTimeout(function() {
-                                window.location.href = 'view-employee.php';
+                                window.location.href = 'view-kitchen-accounts.php';
                             }, 2000);
                         }
                         $('#submit').attr('disabled', false);
@@ -465,7 +464,7 @@ $row7['Options'] = explode(',', $row7['Options']);
                 var id = $('#userid').val();
                 var Photo = $('#OldPhoto').val();
                 $.ajax({
-                    url: "ajax_files/ajax_employee.php",
+                    url: "ajax_files/ajax_kitchen.php",
                     method: "POST",
                     data: {
                         action: action,

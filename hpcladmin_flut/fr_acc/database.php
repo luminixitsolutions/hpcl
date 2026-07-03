@@ -1,6 +1,6 @@
 <?php
 error_reporting(0);
-$con=mysqli_connect('localhost','root','','kwickbill_happy_shop');
+$con=mysqli_connect('localhost','root','','hpcl');
 if (! $con) {
     echo "Error: Unable to connect to MySQL." . PHP_EOL;
     echo "Debugging errno: " . mysqli_connect_errno() . PHP_EOL;

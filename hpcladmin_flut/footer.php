@@ -42,9 +42,9 @@
 </script>
 <script>
   const APP_PARAMS = {
-    user_id: "<?php echo htmlspecialchars($displayUserId); ?>",
-    lat: "<?php echo htmlspecialchars($lat); ?>",
-    lng: "<?php echo htmlspecialchars($lng); ?>"
+    user_id: "<?php echo htmlspecialchars($displayUserId ?? ''); ?>",
+    lat: "<?php echo htmlspecialchars($lat ?? ''); ?>",
+    lng: "<?php echo htmlspecialchars($long ?? ''); ?>"
   };
 
   function goPage(url) {

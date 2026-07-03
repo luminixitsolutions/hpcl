@@ -1,23 +1,29 @@
 <?php 
-	$user_id = $_SESSION['fr_admin'];
+	$user_id = $_SESSION['fr_admin'] ?? '';
     $sql77 = "SELECT * FROM tbl_users_bill WHERE id='$user_id'";
 	$row77 = getRecord($sql77);
-    $Roll = $row77['Roll'];
+    if (!$row77) {
+        $sql77 = "SELECT * FROM tbl_users WHERE id='$user_id'";
+        $row77 = getRecord($sql77);
+    }
+    $Roll = $row77['Roll'] ?? 5;
     
-    //$BillSoftFrId = $row77['BillSoftFrId'];
-	
     if($Roll == 5){
         $BillSoftFrId = $_SESSION['fr_admin'];
     }
     else{
-        $BillSoftFrId = $row77['BillSoftFrId'];
+        $BillSoftFrId = $row77['BillSoftFrId'] ?? $_SESSION['fr_admin'];
     }
-    $AllocateRawProd = $row77['AllocateRawProd'];
+    $AllocateRawProd = $row77['AllocateRawProd'] ?? 0;
 
-$adminid = $_SESSION['Admin']['id'];
-$sql771 = "SELECT id,Options2 FROM tbl_users_bill WHERE id='$adminid'";
-	$row771 = getRecord($sql771);
-	$Options = explode(',',$row771['Options2']); 
+$adminid = $_SESSION['Admin']['id'] ?? 0;
+$sql771 = "SELECT id, Roll, Options, Options2 FROM tbl_users_bill WHERE id='$adminid'";
+$row771 = getRecord($sql771);
+if ((int)($row771['Roll'] ?? 0) === 167) {
+    $Options = array_filter(explode(',', (string)($row771['Options'] ?? '')));
+} else {
+    $Options = explode(',', (string)($row771['Options2'] ?? ''));
+}
  ?>
  
 <nav class="layout-navbar navbar navbar-expand-lg align-items-lg-center bg-dark container-p-x" id="layout-navbar">

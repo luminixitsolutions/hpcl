@@ -542,7 +542,7 @@ class Spreadsheet_Excel_Reader {
 		}
 		return null;
 	}
-	function fontProperty($row,$col,$sheet=0,$prop) {
+	function fontProperty($row,$col,$prop,$sheet=0) {
 		$font = $this->fontRecord($row,$col,$sheet);
 		if ($font!=null) {
 			return $font[$prop];
@@ -557,7 +557,7 @@ class Spreadsheet_Excel_Reader {
 		if ($formatColor!="") {
 			return $formatColor;
 		}
-		$ci = $this->fontProperty($row,$col,$sheet,'color');
+		$ci = $this->fontProperty($row,$col,'color',$sheet);
                 return $this->rawColor($ci);
         }
         function rawColor($ci) {
@@ -567,19 +567,19 @@ class Spreadsheet_Excel_Reader {
 		return "";
 	}
 	function bold($row,$col,$sheet=0) {
-		return $this->fontProperty($row,$col,$sheet,'bold');
+		return $this->fontProperty($row,$col,'bold',$sheet);
 	}
 	function italic($row,$col,$sheet=0) {
-		return $this->fontProperty($row,$col,$sheet,'italic');
+		return $this->fontProperty($row,$col,'italic',$sheet);
 	}
 	function underline($row,$col,$sheet=0) {
-		return $this->fontProperty($row,$col,$sheet,'under');
+		return $this->fontProperty($row,$col,'under',$sheet);
 	}
 	function height($row,$col,$sheet=0) {
-		return $this->fontProperty($row,$col,$sheet,'height');
+		return $this->fontProperty($row,$col,'height',$sheet);
 	}
 	function font($row,$col,$sheet=0) {
-		return $this->fontProperty($row,$col,$sheet,'font');
+		return $this->fontProperty($row,$col,'font',$sheet);
 	}
 	
 	// DUMP AN HTML TABLE OF THE ENTIRE XLS DATA

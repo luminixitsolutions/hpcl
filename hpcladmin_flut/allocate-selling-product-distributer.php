@@ -5,6 +5,9 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Selling-Products";
 $Page = "Allocate-Products";
+$pageAction = $_GET['action'] ?? '';
+$frid = $_GET['frid'] ?? '';
+$shopName = $_GET['ShopName'] ?? '';
 
 function RandomStringGenerator($n)
     {
@@ -19,12 +22,12 @@ function RandomStringGenerator($n)
         return $generated_string;
     } 
     
-if($_GET['action'] == 'yes'){
+if($pageAction === 'yes'){
 $sql = "SELECT * FROM tbl_cust_products2 WHERE ProdType=0 AND ProdType2=1 AND Status=1";
 $row = getList($sql);
 foreach($row as $result){
 $Prod_Id = $result['id'];
-$FrId = $_GET['frid'];
+$FrId = $frid;
 $ProdType2 = $result['ProdType2'];
 $Status = $result['Status'];
     $sql = "SELECT * FROM tbl_distributer_products WHERE ProdId='$Prod_Id' AND CreatedBy='$FrId'";
@@ -58,9 +61,9 @@ $Status = $result['Status'];
 }
 }
 
-if($_GET['action'] == 'clearprod'){
-    $FrId = $_GET['frid'];
-    $ShopName = $_GET['ShopName'];
+if($pageAction === 'clearprod'){
+    $FrId = $frid;
+    $ShopName = $shopName;
     $modified_time = gmdate('Y-m-d H:i:s.') . gettimeofday()['usec'];
     $sql = "UPDATE tbl_distributer_products SET clearprod='Yes',checkstatus='0',delete_flag=1,modified_time='$modified_time' WHERE CreatedBy='$FrId' AND ProdType=0 AND ProdType2=1";
     $conn->query($sql);
@@ -100,9 +103,9 @@ if($_GET['action'] == 'clearprod'){
 <div class="layout-content">
 
 <div class="container-fluid flex-grow-1 container-p-y">
-<h4 class="font-weight-bold py-3 mb-0">Allocate Products To <?php echo $_GET['ShopName'];?> Franchise 
-<?php if($user_id == 2){?>
-<a href="allocate-selling-product-distributer.php?frid=<?php echo $_GET['frid'];?>&ShopName=<?php echo $_GET['ShopName'];?>&action=yes" class="badge badge-pill badge-warning" style="float:right;">Display Product</a>
+<h4 class="font-weight-bold py-3 mb-0">Allocate Products To <?php echo htmlspecialchars($shopName, ENT_QUOTES, 'UTF-8');?> Franchise 
+<?php if($user_id == 2 || $user_id == 33){?>
+<a href="allocate-selling-product-distributer.php?frid=<?php echo urlencode($frid);?>&ShopName=<?php echo urlencode($shopName);?>&action=yes" class="badge badge-pill badge-warning" style="float:right;">Display Product</a>
 
 <?php } ?>
 </h4>
@@ -131,15 +134,16 @@ if($_GET['action'] == 'clearprod'){
         </thead>
         <tbody>
             <?php 
-            $frid = $_GET['frid'];
+            $frid = (int)$frid;
             $sql44 = "SELECT VedId FROM tbl_users WHERE id='$frid'";
             $row44 = getRecord($sql44);
-            $VedId = $row44['VedId'];
+            $VedId = $row44['VedId'] ?? '';
             $sql = "SELECT p.ProductName,p.BarcodeNo,p.checkstatus,p.id,p.ProdType2,p.MinPrice,c.Name As Category,cs.Name As SubCatName,p.ProdId FROM tbl_distributer_products p 
                     INNER JOIN tbl_cust_category_2025 c ON c.id=p.CatId 
                     LEFT JOIN tbl_cust_sub_category_2025 cs ON cs.id=p.SubCatId WHERE p.ProdType=0 AND p.ProdType2=1 AND p.CreatedBy='$frid' AND p.Status=1";
             //$sql.= " ORDER BY p.id DESC";
             $sql.= " ORDER BY p.checkstatus DESC, p.id DESC";
+            //echo $sql;
             $res = $conn->query($sql);
             while($row = $res->fetch_assoc())
             {
@@ -156,7 +160,7 @@ if($_GET['action'] == 'clearprod'){
                                                 </label></td>
                                                 <input type="hidden" value="0" name="CheckId[]" id="CheckId<?php echo $row['id']; ?>">
                                                 <input type="hidden" value="<?php echo $row['id']; ?>" name="ProdId[]">
-                                                <input type="hidden" value="<?php echo $_GET['frid'];?>" name="frid" id="frid">
+                                                <input type="hidden" value="<?php echo htmlspecialchars($frid, ENT_QUOTES, 'UTF-8');?>" name="frid" id="frid">
                                                   <td><?php echo $row['id']; ?></td>
                                                   <td><?php echo $row['ProdId']; ?></td>
                 <td><?php echo $row['ProductName']; ?></td>
@@ -177,7 +181,7 @@ if($_GET['action'] == 'clearprod'){
     </table>
     <br><br>
     <?php if($user_id == 2){?>
-    <a onClick="return confirm('Are you sure you want clear allocate product');"  href="allocate-selling-product-distributer.php?frid=<?php echo $_GET['frid'];?>&ShopName=<?php echo $_GET['ShopName'];?>&action=clearprod" class="badge badge-pill badge-danger" style="float:right;">Clear Allocate Product</a>&nbsp;&nbsp;
+    <a onClick="return confirm('Are you sure you want clear allocate product');"  href="allocate-selling-product-distributer.php?frid=<?php echo urlencode($frid);?>&ShopName=<?php echo urlencode($shopName);?>&action=clearprod" class="badge badge-pill badge-danger" style="float:right;">Clear Allocate Product</a>&nbsp;&nbsp;
 <?php } ?>
 </div>
 </div>

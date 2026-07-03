@@ -5,8 +5,8 @@ include_once 'auth.php';
 $MainPage="Dashboard";
 $Page = "Dashboard";
 $user_id = $_SESSION['Admin']['id'];
-$uid = $_REQUEST['uid']; 
-if($_REQUEST['uid'] == ''){
+$uid = $_REQUEST['uid'] ?? $_REQUEST['user_id'] ?? '';
+if ($uid == '') {
 $sql11 = "SELECT * FROM tbl_users WHERE id='$user_id'";
 $row = getRecord($sql11);
 $_SESSION['Admin'] = $row;
@@ -126,7 +126,7 @@ $Roll = $row['Roll'];
     }
      $res2 = $conn->query($sql);
 	$row2 = $res2->fetch_assoc();
-    return $row2['result'];
+    return (float)($row2['result'] ?? 0);
     }
     
     
@@ -173,7 +173,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Cash</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('cash_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('cash_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>
@@ -188,7 +188,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Phone Pay</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('phonepay_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('phonepay_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>
@@ -204,7 +204,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Google Pay</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('googlepay_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('googlepay_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>
@@ -220,7 +220,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Paytm</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('paytm_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('paytm_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>
@@ -236,7 +236,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Other UPI</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('otherupi_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('otherupi_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>
@@ -251,7 +251,7 @@ $Roll = $row['Roll'];
                                             <div class="ion ion-ios-card display-4"></div>
                                             <div class="ml-4">
                                                 <div class="text-white small" style="font-weight: 700;">Borrowing / उधार</div>
-                                                <div class="text-large">₹<?php echo number_format(countval('borrow_payment'),2);?></div>
+                                                <div class="text-large">₹<?php echo number_format((float)countval('borrow_payment'), 2);?></div>
                                             </div>
                                         </div>
                                     </div>

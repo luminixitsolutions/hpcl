@@ -5,8 +5,8 @@ include_once 'auth.php';
 $MainPage="Dashboard";
 $Page = "Dashboard";
 $user_id = $_SESSION['Admin']['id'];
-$uid = $_REQUEST['uid']; 
-if($_REQUEST['uid'] == ''){
+$uid = $_REQUEST['uid'] ?? $_REQUEST['user_id'] ?? '';
+if ($uid == '') {
 $sql11 = "SELECT * FROM tbl_users WHERE id='$user_id'";
 $row = getRecord($sql11);
 $_SESSION['Admin'] = $row;
@@ -18,6 +18,12 @@ $_SESSION['Admin'] = $row;
 }
 //echo $sql11;
 $Roll = $row['Roll'];
+$CocoFranchiseAccess = $row['CocoFranchiseAccess'] ?? '';
+include_once 'shop_admin_helper.php';
+if (isShopAdmin($Roll)) {
+    shopAdminEnforceZoneAccess((int)($_REQUEST['zoneid'] ?? 0), $row);
+    shopAdminEnforceSubZoneAccess((int)($_REQUEST['subzoneid'] ?? 0), $row);
+}
 include_once 'report_filter_session.php';
 /*function RandomStringGenerator($n)
 {
@@ -238,14 +244,14 @@ function countval($val,$frid,$Calendar){
         //echo $sql;
      $res2 = $conn->query($sql);
     $row2 = $res2->fetch_assoc();
-    return $row2['result'];
+    return (float)($row2['result'] ?? 0);
     }
     
   $zoneid = $_REQUEST['zoneid'];
   $subzoneid = $_REQUEST['subzoneid'];
   $sql77 = "SELECT GROUP_CONCAT(id) AS frids FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='$zoneid'";
   $row77 = getRecord($sql77);
-   $frids = $row77['frids'];
+   $frids = shopAdminFilterFrIds($row77['frids'] ?? '', $row);
     
 $Calendar = $_REQUEST['calendar'];
  $sql = "SELECT SUM(NetAmount) AS NetAmount,COUNT(*) AS TotInv,SUM(Discount) AS TotDiscount,tc.FrId,tu.ShopName,tu.Address FROM tbl_customer_invoice tc INNER JOIN tbl_users_bill tu ON tu.id=tc.FrId WHERE tu.Roll='5'  AND tu.id IN($frids)";
@@ -325,6 +331,11 @@ $sql.=" GROUP BY tc.FrId ";
 $sql.=" ORDER BY NetAmount DESC";
 //echo $sql;
 $row = getList($sql);
+ $rncnt224 = 0;
+ $TotNetAmount = 0;
+ $TotCashAmount = 0;
+ $TotUpiAmount = 0;
+ $NetAmount3 = 0;
  foreach($row as $result){
      
     $NetAmount2 = $result['NetAmount'];
@@ -335,8 +346,8 @@ $row = getList($sql);
        $NetAmount = 0;
    }
    
-   $rncnt224+=$result['TotInv'];
-    $TotNetAmount+=$NetAmount;
+   $rncnt224 += (int)($result['TotInv'] ?? 0);
+    $TotNetAmount += $NetAmount;
    $TotCashAmount+=countval('cash_payment',$result['FrId'],$Calendar);
    $TotUpiAmount+=countval('upi_payment',$result['FrId'],$Calendar);
     if($NetAmount > 0){
@@ -503,7 +514,7 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                 <div class="row align-items-center">
                                     <div class="col align-self-center pr-0" width="80%">
                                         <h6 class=" mb-1" style="color:black;font-size:14px;font-weight:500;"><?php echo $result['ShopName'];?></h6>
-                                          <span class="small text-secondary" style=""><?php echo $result['Address'];?></span>
+                                          <span class="small text-secondary" style=""><?php echo $result['Address'] ?? '';?></span>
                                           <p class="small " style="text-transform:capitalize;color:black">Employees : <?php echo $row3['TotEmp'];?> | Salary : <?php echo $row3['MonthlySalary'];?> <br>
                                           Total Invoice : <?php echo $result['TotInv'];?> <br>
                                           QSR KITCHEN SALES : <?= $row21['TotSell']; ?> | &#8377;<?= $row21['NetAmount']; ?> <br>
@@ -515,16 +526,16 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                        
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($NetAmount,2);?></strong>
-                                         <br><span style="font-size:12px;">Cash : ₹<?php echo number_format(countval('cash_payment',$result['FrId'],$Calendar),2);?></span>
-                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format(countval('upi_payment',$result['FrId'],$Calendar),2);?></span>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($NetAmount ?? 0), 2);?></strong>
+                                         <br><span style="font-size:12px;">Cash : ₹<?php echo number_format((float)(countval('cash_payment',$result['FrId'],$Calendar) ?? 0), 2);?></span>
+                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format((float)(countval('upi_payment',$result['FrId'],$Calendar) ?? 0), 2);?></span>
                                          <?php if($zomato > 0){?>
-                                         <br><span style="font-size:12px;">Swiggy/Zomato : ₹<?php echo number_format($zomato,2);?></span>
+                                         <br><span style="font-size:12px;">Swiggy/Zomato : ₹<?php echo number_format((float)($zomato ?? 0), 2);?></span>
                                          <?php } ?>
                                          <?php if($credit > 0){?>
-                                         <br><span style="font-size:12px;">Credit : ₹<?php echo number_format($credit,2);?></span>
+                                         <br><span style="font-size:12px;">Credit : ₹<?php echo number_format((float)($credit ?? 0), 2);?></span>
                                          <?php } ?>
-                                         <br><span style="font-size:12px;">Avg : <?php echo number_format($NetAmount/$result['TotInv'],2);?></span></p>
+                                         <br><span style="font-size:12px;">Avg : <?php echo number_format(!empty($result['TotInv']) ? (float)$NetAmount / (float)$result['TotInv'] : 0, 2);?></span></p>
                                     </div>
                                 </div>
                             </li>
@@ -557,7 +568,7 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotCashAmount,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($TotCashAmount ?? 0), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -571,7 +582,7 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotUpiAmount,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($TotUpiAmount ?? 0), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -585,14 +596,14 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotNetAmount+$NetAmount3,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)(($TotNetAmount ?? 0) + ($NetAmount3 ?? 0)), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
                             
                         </ul>
                     </div>
-                    <?php if($TotNetAmount+$NetAmount3 == 0){?>
+                    <?php if((($TotNetAmount ?? 0) + ($NetAmount3 ?? 0)) == 0){?>
                      <div class=" px-0">
                         <ul class="list-group list-group-flush">
                             
@@ -625,7 +636,7 @@ $credit = countval('credit',$result['FrId'],$Calendar);
                                       
                                     </div> 
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong><?php echo number_format(($TotNetAmount+$NetAmount3)/$rncnt225,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong><?php echo number_format($rncnt225 > 0 ? (float)(($TotNetAmount ?? 0) + ($NetAmount3 ?? 0)) / $rncnt225 : 0, 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>

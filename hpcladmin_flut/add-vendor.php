@@ -5,12 +5,13 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage="Vendors";
 $Page = "Add-Vendors";
+$id = $_GET['id'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
 
 <head>
-    <title><?php echo $Proj_Title; ?> - <?php if($_GET['id']) {?>Edit <?php } else{?> Add <?php } ?> Vendor Account
+    <title><?php echo $Proj_Title; ?> - <?php if($id) {?>Edit <?php } else{?> Add <?php } ?> Vendor Account
     </title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -48,23 +49,32 @@ $Page = "Add-Vendors";
                 
 
                 <?php 
-$id = $_GET['id'];
-$sql7 = "SELECT * FROM tbl_users WHERE id='$id'";
-$row7 = getRecord($sql7);
+if ($id !== '') {
+    $sql7 = "SELECT * FROM tbl_users WHERE id='$id'";
+    $row7 = getRecord($sql7);
+} else {
+    $row7 = [];
+}
+$row7Defaults = [
+    'Fname' => '', 'Mname' => '', 'Lname' => '', 'EmailId' => '', 'Password' => '',
+    'Phone' => '', 'Phone2' => '', 'Details' => '', 'Photo' => '', 'Photo2' => '', 'Photo3' => '',
+    'CountryId' => '', 'StateId' => '', 'CityId' => '', 'Pincode' => '', 'Address' => '', 'Status' => '1',
+];
+$row7 = array_merge($row7Defaults, is_array($row7) ? $row7 : []);
 
 ?>
 
                 <div class="layout-content">
 
                     <div class="container-fluid flex-grow-1 container-p-y">
-                        <h4 class="font-weight-bold py-3 mb-0"><?php if($_GET['id']) {?>Edit <?php } else{?> Add
+                        <h4 class="font-weight-bold py-3 mb-0"><?php if($id) {?>Edit <?php } else{?> Add
                             <?php } ?> Vendor Account</h4>
 
                         <div class="card mb-4">
                             <div class="card-body">
                                 <div id="alert_message"></div>
                                 <form id="validation-form" method="post" autocomplete="off" action="ajax_files/ajax_vendors.php" enctype="multipart/form-data">
-                                    <input type="hidden" name="id" value="<?php echo $_GET['id']; ?>" id="userid">
+                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>" id="userid">
                                     <input type="hidden" name="action" value="Save" id="action">
                                     <div class="form-row">
                                        
@@ -215,7 +225,8 @@ $row7 = getRecord($sql7);
                                             <select class="form-control" id="StateId" name="StateId" required>
                                                 <option selected="" disabled="">Select State</option>
                                                 <?php 
-        $CountryId = $row7['CountryId'];
+        $CountryId = $row7['CountryId'] ?? '';
+        if ($CountryId !== '') {
         $q = "select * from tbl_state WHERE CountryId='$CountryId' ORDER BY Name ASC";
         $r = $conn->query($q);
         while($rw = $r->fetch_assoc())
@@ -223,7 +234,8 @@ $row7 = getRecord($sql7);
 ?>
                                                 <option <?php if($row7['StateId']==$rw['id']){ ?> selected <?php } ?>
                                                     value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-                                                <?php } ?>
+                                                <?php }
+        } ?>
                                             </select>
                                         </div>
                                         <div class="form-group col-md-3">
@@ -231,7 +243,8 @@ $row7 = getRecord($sql7);
                                             <select class="form-control" id="CityId" name="CityId" required>
                                                 <option selected="" disabled="">Select City</option>
                                                 <?php 
- $StateId = $row7['StateId'];
+ $StateId = $row7['StateId'] ?? '';
+        if ($StateId !== '') {
         $q = "select * from tbl_city WHERE StateId='$StateId' ORDER BY Name ASC";
         $r = $conn->query($q);
         while($rw = $r->fetch_assoc())
@@ -239,7 +252,8 @@ $row7 = getRecord($sql7);
 ?>
                                                 <option <?php if($row7['CityId']==$rw['id']){ ?> selected <?php } ?>
                                                     value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-                                                <?php } ?>
+                                                <?php }
+        } ?>
                                             </select>
                                         </div>
 
@@ -336,7 +350,6 @@ $row7 = getRecord($sql7);
     $(document).ready(function() {
         //$(document).on("click", ".btn-finish", function(event){
         $('#validation-form').on('submit', function(e) {
-            exit();
             e.preventDefault();
             if ($('#validation-form').valid()) {
 

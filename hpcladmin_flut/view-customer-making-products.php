@@ -5,6 +5,7 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Selling-Products";
 $Page = "Products";
+$listAction = $_GET['action'] ?? '';
 
 function RandomStringGenerator($n)
     {
@@ -58,9 +59,9 @@ $sql = "SELECT * FROM tbl_cust_products_2025 WHERE code is null";
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "delete")
 {
-    $id = $_REQUEST["id"];
+    $id = $_REQUEST["id"] ?? '';
     $sql = "SELECT * FROM tbl_cust_products_2025 WHERE checkstatus=1 AND ProdId='$id'";
     $rncnt = getRow($sql);
     if($rncnt > 0){
@@ -119,7 +120,7 @@ if($_REQUEST["action"]=="delete")
         </thead>
         <tbody>
             <?php 
-            if($_GET['action'] == 'allocate'){
+            if($listAction === 'allocate'){
              $sql = "SELECT p.*,c.Name As Category,cs.Name As SubCatName FROM tbl_cust_products2 p 
                     LEFT JOIN tbl_cust_category_2025 c ON c.id=p.CatId 
                     LEFT JOIN tbl_cust_sub_category_2025 cs ON cs.id=p.SubCatId WHERE p.ProdType=0 AND p.ProdType2=2";
@@ -186,7 +187,7 @@ if($_REQUEST["action"]=="delete")
             <?php     
             } }
             }
-            else if($_GET['action'] == 'notallocate'){
+            else if($listAction === 'notallocate'){
              $sql = "SELECT p.*,c.Name As Category,cs.Name As SubCatName FROM tbl_cust_products2 p 
                     LEFT JOIN tbl_cust_category_2025 c ON c.id=p.CatId 
                     LEFT JOIN tbl_cust_sub_category_2025 cs ON cs.id=p.SubCatId WHERE p.ProdType=0 AND p.ProdType2=2";

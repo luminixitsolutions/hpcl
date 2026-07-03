@@ -33,9 +33,9 @@ $Page = "Assign-Franchise-Zone";
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "delete")
 {
-  $id = $_REQUEST["id"];
+  $id = $_REQUEST["id"] ?? '';
   $sql11 = "DELETE FROM tbl_assign_fr_to_zone WHERE id = '$id'";
   $conn->query($sql11);
  

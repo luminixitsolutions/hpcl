@@ -5,6 +5,7 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage="Selling-Products";
 $Page = "Products";
+$id = $_GET['id'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
@@ -37,20 +38,37 @@ $Page = "Products";
 <div class="layout-content">
 
 <div class="container-fluid flex-grow-1 container-p-y">
-<h4 class="font-weight-bold py-3 mb-0">Add Customer Making Product</h4>
+<h4 class="font-weight-bold py-3 mb-0"><?php echo $id ? 'Edit' : 'Add'; ?> Customer Making Product</h4>
 
 <?php 
-$id = $_GET['id'];
-$sql7 = "SELECT * FROM tbl_cust_products2 WHERE id='$id'";
-$res7 = $conn->query($sql7);
-$row7 = $res7->fetch_assoc();
+$row7 = [];
+if ($id !== '') {
+    $sql7 = "SELECT * FROM tbl_cust_products2 WHERE id='$id'";
+    $res7 = $conn->query($sql7);
+    $fetched = $res7 ? $res7->fetch_assoc() : null;
+    if (is_array($fetched)) {
+        $row7 = $fetched;
+    }
+}
+$row7Defaults = [
+    'ProductName' => '', 'BrandId' => '', 'CatId' => '', 'SubCatId' => '',
+    'Division' => '', 'Segment' => '', 'Family' => '', 'ClassId' => '', 'McDesc' => '', 'BrandDesc' => '',
+    'PurchasePrice' => '', 'SubTotal' => '', 'DiscPer' => '0', 'Discount' => '0', 'MinPrice' => '',
+    'GstAmt' => '', 'CgstAmt' => '', 'SgstAmt' => '', 'IgstAmt' => '', 'ProdPrice' => '',
+    'Unit' => '', 'BarcodeNo' => '', 'MinQty' => '', 'Status' => '1', 'ProdType2' => '2', 'Transfer' => '0',
+    'SrNo' => '', 'StockQty' => '0', 'MakingProdRec' => '', 'Photo' => '', 'TempPrdId' => '',
+];
+$row7 = array_merge($row7Defaults, $row7);
 
-$sql33 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE ProdId='$id'";
-$rncnt33 = getRow($sql33);
+$rncnt33 = 0;
+if ($id !== '') {
+    $sql33 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE ProdId='$id'";
+    $rncnt33 = getRow($sql33);
+}
 
 $query22 = "SELECT count(*) as totrec FROM tbl_raw_prod_make_qty_2025 WHERE CustProdId = '$id'";
 $data22 = getRecord($query22);
-$row_cnt = $data22['totrec'] + 1;
+$row_cnt = (int)($data22['totrec'] ?? 0) + 1;
 ?>
 
 <?php 
@@ -284,7 +302,7 @@ Other Products
 <div class="card-body">
     <input type="hidden" name="action" value="Add">
     <input type="hidden" id="TempPrdId" name="TempPrdId" value="<?php echo rand(10000,99999);?>">
-    <input type="hidden" name="id" id="id" value="<?php echo $_GET['id']; ?>"/> 
+    <input type="hidden" name="id" id="id" value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>"/>
      <div class="form-row">
 <div class="form-group col-lg-6">
 <label class="form-label">Product Name<span class="text-danger">*</span></label>
@@ -329,6 +347,7 @@ Other Products
   <select class="form-control" id="SubCatId" name="SubCatId">
 <option selected="" disabled="" value="">Select Sub Category</option>
 <?php 
+        if (($row7['CatId'] ?? '') !== '') {
         $q = "select * from tbl_cust_sub_category_2025 WHERE Status='1' AND CatId='".$row7['CatId']."' AND ProdType=0";
         $r = $conn->query($q);
         while($rw = $r->fetch_assoc())
@@ -336,7 +355,8 @@ Other Products
         
 ?>
                 <option <?php if($row7['SubCatId']==$rw['id']){ ?> selected <?php } ?> value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
-              <?php } ?>
+              <?php }
+        } ?>
 </select>
 <div class="clearfix"></div>
 </div>
@@ -654,6 +674,7 @@ Other Products
 
 <?php 
 $i=1;
+if ($id !== '') {
   $sql12 = "SELECT * FROM tbl_raw_prod_make_qty_2025 WHERE CustProdId='$id'";
   $row12 = getList($sql12);
   foreach($row12 as $result12){
@@ -695,7 +716,9 @@ $i=1;
 <button class="btn btn-danger btn_remove" type="button" id="<?php echo $i;?>"><i class="fa fa-times"></i></button>
 </div>
 </div>
-<?php $i++;} ?>
+<?php $i++;} 
+}
+?>
 
 <div id="dynamic_field"> 
     <div class="form-row" data-row="<?php echo $row_cnt; ?>">

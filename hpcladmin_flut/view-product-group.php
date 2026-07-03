@@ -58,9 +58,9 @@ $sql = "SELECT * FROM tbl_cust_products_2025 WHERE code is null";
 
 
 <?php
-if($_REQUEST["action"]=="delete")
+if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "delete")
 {
-    $id = $_REQUEST["id"];
+    $id = $_REQUEST["id"] ?? '';
     $sql11 = "DELETE FROM tbl_product_group WHERE id = '$id'";
     $conn->query($sql11);
     echo "<script>alert('Deleted Successfully!');window.location.href='view-product-group.php';</script>";

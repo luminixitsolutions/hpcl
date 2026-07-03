@@ -1,18 +1,29 @@
 <?php
 session_start();
 include_once '../config.php';
-include('../../libs/phpqrcode/qrlib.php');
-$user_id = $_SESSION['Admin']['id'];
+
+$postAction = reqAction('');
+$user_id = $_SESSION['Admin']['id'] ?? 0;
+
+// Form POST with no data usually means post_max_size exceeded or wrong request type
+if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $postAction === '' && empty($_POST)) {
+    echo "<script>alert('Form data was not received by the server. Please contact admin to check PHP post_max_size settings.'); window.history.back();</script>";
+    exit;
+}
+
 $sql77 = "SELECT * FROM tbl_users WHERE id='$user_id'";
 $row77 = getRecord($sql77);
-$Roll = $row77['Roll'];
+$Roll = $row77['Roll'] ?? '';
 
 
-if ($_POST['action'] == 'Add') {
+if ($postAction === 'Add') {
 
     // 🔹 Helper: Sanitize Input
     function sanitize($conn, $data) {
-        return mysqli_real_escape_string($conn, trim($data));
+        if ($data === null || is_array($data)) {
+            $data = '';
+        }
+        return mysqli_real_escape_string($conn, trim((string)$data));
     }
 
     // 🔹 Helper: Random String Generator
@@ -41,10 +52,24 @@ if ($_POST['action'] == 'Add') {
             $$field = isset($_POST[$field]) ? sanitize($conn, $_POST[$field]) : '';
         }
 
+        // Normalize numeric / required DB defaults (see kwickbill_happy_shop.sql)
+        $StockQty   = ($StockQty === '') ? 0 : (int)$StockQty;
+        $TempPrdId  = ($TempPrdId === '') ? 0 : (int)$TempPrdId;
+        $Division   = (int)$Division;
+        $Segment    = (int)$Segment;
+        $Family     = (int)$Family;
+        $ClassId    = (int)$ClassId;
+        $McDesc     = (int)$McDesc;
+        $BrandDesc  = (int)$BrandDesc;
+        $SubTotal   = ($SubTotal === '') ? 0 : $SubTotal;
+        $Discount   = ($Discount === '') ? 0 : $Discount;
+        $DiscPer    = ($DiscPer === '') ? 0 : $DiscPer;
+        $SrNo       = ($SrNo === '') ? 0 : $SrNo;
+
         $id = $_POST['id'] ?? '';
         $CreatedDate = date('Y-m-d');
         $modified_time = gmdate('Y-m-d H:i:s.') . gettimeofday()['usec'];
-        $user_id = $_SESSION['user_id'] ?? 0;
+        $admin_id = $_SESSION['Admin']['id'] ?? 0;
 
         // 🔹 Handle Photo Upload
         $Photo = $_POST['OldPhoto'] ?? '';
@@ -65,14 +90,17 @@ if ($_POST['action'] == 'Add') {
         if (empty($id)) {
             // 🟢 INSERT tbl_cust_products2
             $sql = "INSERT INTO tbl_cust_products2 
-                    SET Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId',
+                    SET ProdId='0', Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId',
                         McDesc='$McDesc', BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer',
                         Discount='$Discount', Unit='$Unit', PurchasePrice='$PurchasePrice', Transfer='$Transfer',
                         ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId', ProductName='$ProductName',
                         CatId='$CatId', MinPrice='$MinPrice', Status='$Status', SrNo='$SrNo', CreatedDate='$CreatedDate',
                         CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice',
                         CgstAmt='$CgstAmt', SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo',
-                        StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo'";
+                        StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo',
+                        ProdType='0', CreatedBy='$admin_id', ModifiedBy='0', push_flag='0', delete_flag='0',
+                        Assets='0', checkstatus='0', tempstatus='0', CrossSell='0', MatchMrpProdId='0',
+                        OldNew='0', allotstatus='0'";
 
             if (!$conn->query($sql)) throw new Exception("Insert Error: " . $conn->error);
 
@@ -82,6 +110,21 @@ if ($_POST['action'] == 'Add') {
             // 🟢 Update code field
             if (!$conn->query("UPDATE tbl_cust_products2 SET code='$Code2' WHERE id='$ProdId'"))
                 throw new Exception("Code Update Error: " . $conn->error);
+
+            // 🟢 Insert master copy into tbl_cust_products_2025 (CreatedBy=0 for admin catalog)
+            $sql = "INSERT INTO tbl_cust_products_2025 SET ProdId='$ProdId',
+                        Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId',
+                        McDesc='$McDesc', BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer',
+                        Discount='$Discount', Unit='$Unit', PurchasePrice='$PurchasePrice', Transfer='$Transfer',
+                        ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId', ProductName='$ProductName',
+                        CatId='$CatId', MinPrice='$MinPrice', Status='$Status', SrNo='$SrNo', CreatedDate='$CreatedDate',
+                        CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice',
+                        CgstAmt='$CgstAmt', SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo',
+                        StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo',
+                        ProdType='0', CreatedBy='0', ModifiedBy='0', code='$Code2', checkstatus='1',
+                        push_flag='1', delete_flag='0', Assets='0', CrossSell='0', MatchMrpProdId='0',
+                        OldNew='0', allotstatus='0', modified_time='$modified_time'";
+            if (!$conn->query($sql)) throw new Exception("2025 Insert Error: " . $conn->error);
 
             // 🟢 Insert into tbl_vendor_products (if BrandId provided)
             if (!empty($BrandId)) {
@@ -94,7 +137,9 @@ if ($_POST['action'] == 'Add') {
                             CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice',
                             CgstAmt='$CgstAmt', SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo',
                             StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo',
-                            CreatedBy='$BrandId', code='$Code2'";
+                            CreatedBy='$BrandId', ModifiedBy='0', code='$Code2', ProdType='0', push_flag='0',
+                            delete_flag='0', Assets='0', checkstatus='1', tempstatus='1', CrossSell='0',
+                            MatchMrpProdId='0', OldNew='0', allotstatus='0'";
                 if (!$conn->query($sql)) throw new Exception("Vendor Insert Error: " . $conn->error);
             }
 
@@ -105,31 +150,36 @@ if ($_POST['action'] == 'Add') {
                         BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer', Discount='$Discount', Unit='$Unit',
                         PurchasePrice='$PurchasePrice', Transfer='$Transfer', ProdType2='$ProdType2', BrandId='$BrandId',
                         SubCatId='$SubCatId', ProductName='$ProductName', CatId='$CatId', MinPrice='$MinPrice',
-                        Status='$Status', SrNo='$SrNo', ModifiedBy='$user_id', ModifiedDate='$CreatedDate',
+                        Status='$Status', SrNo='$SrNo', ModifiedBy='$admin_id', ModifiedDate='$CreatedDate',
                         CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice',
                         CgstAmt='$CgstAmt', SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo',
-                        StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo'
+                        StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo', ProdType='0'
                     WHERE id='$id'";
             if (!$conn->query($sql)) throw new Exception("Product Update Error: " . $conn->error);
 
-            // 🟡 UPDATE tbl_cust_products_2025
-            $sql = "UPDATE tbl_cust_products_2025 
-                    SET Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId', McDesc='$McDesc',
+            // 🟡 UPDATE or INSERT tbl_cust_products_2025 (admin master row)
+            $sql2025Fields = "Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId', McDesc='$McDesc',
                         BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer', Discount='$Discount',
                         Unit='$Unit', modified_time='$modified_time', PurchasePrice='$PurchasePrice', Transfer='$Transfer',
-                        ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId', ModifiedBy='$user_id',
+                        ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId', ModifiedBy='$admin_id',
                         ProductName='$ProductName', CatId='$CatId', MinPrice='$MinPrice', Status='$Status', SrNo='$SrNo',
                         ModifiedDate='$CreatedDate', CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer',
                         GstAmt='$GstAmt', ProdPrice='$ProdPrice', CgstAmt='$CgstAmt', SgstAmt='$SgstAmt',
                         IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo', StockQty='$StockQty', TempPrdId='$TempPrdId',
-                        MinQty='$MinQty', Photo='$Photo'
-                    WHERE ProdId='$id'";
+                        MinQty='$MinQty', Photo='$Photo', ProdType='0', push_flag=1, delete_flag=0";
+            if (getRow("SELECT id FROM tbl_cust_products_2025 WHERE ProdId='$id' AND CreatedBy='0'") > 0) {
+                $sql = "UPDATE tbl_cust_products_2025 SET $sql2025Fields WHERE ProdId='$id' AND CreatedBy='0'";
+            } else {
+                $Code2 = $Code . $id;
+                $sql = "INSERT INTO tbl_cust_products_2025 SET ProdId='$id', $sql2025Fields,
+                        CreatedDate='$CreatedDate', CreatedBy='0', code='$Code2', checkstatus='1',
+                        Assets='0', CrossSell='0', MatchMrpProdId='0', OldNew='0', allotstatus='0'";
+            }
             if (!$conn->query($sql)) throw new Exception("2025 Update Error: " . $conn->error);
 
             // 🟡 UPDATE tbl_vendor_products (if BrandId provided)
             if (!empty($BrandId)) {
-                $sql = "UPDATE tbl_vendor_products 
-                        SET Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId', McDesc='$McDesc',
+                $vendorFields = "Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId', McDesc='$McDesc',
                             BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer', Discount='$Discount',
                             Unit='$Unit', PurchasePrice='$PurchasePrice', Transfer='$Transfer', ProdType2='$ProdType2',
                             BrandId='$BrandId', SubCatId='$SubCatId', ProductName='$ProductName', CatId='$CatId',
@@ -137,8 +187,15 @@ if ($_POST['action'] == 'Add') {
                             CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice',
                             CgstAmt='$CgstAmt', SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo',
                             StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty', Photo='$Photo',
-                            CreatedBy='$BrandId'
-                        WHERE ProdId='$id'";
+                            CreatedBy='$BrandId'";
+                if (getRow("SELECT id FROM tbl_vendor_products WHERE ProdId='$id' AND BrandId='$BrandId'") > 0) {
+                    $sql = "UPDATE tbl_vendor_products SET $vendorFields WHERE ProdId='$id' AND BrandId='$BrandId'";
+                } else {
+                    $Code2 = $Code . $id;
+                    $sql = "INSERT INTO tbl_vendor_products SET ProdId='$id', $vendorFields, code='$Code2',
+                            ProdType='0', ModifiedBy='0', push_flag='0', delete_flag='0', Assets='0',
+                            checkstatus='1', tempstatus='1', CrossSell='0', MatchMrpProdId='0', OldNew='0', allotstatus='0'";
+                }
                 if (!$conn->query($sql)) throw new Exception("Vendor Update Error: " . $conn->error);
                 
                 $sql = "UPDATE tbl_distributer_products 
@@ -190,16 +247,18 @@ if ($_POST['action'] == 'Add') {
         $msg = empty($id) ? 'New Product Added Successfully!' : 'Product Updated Successfully!';
         $redirect = empty($id) ? '../add-customer-product.php' : '../view-customer-products.php';
         echo "<script>alert('$msg'); window.location.href='$redirect';</script>";
+        exit;
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         // 🔻 Rollback on Error
         $conn->rollback();
         echo "<script>alert('Error: " . addslashes($e->getMessage()) . "'); window.history.back();</script>";
+        exit;
     }
 }
 
 
-if($_POST['action'] == 'Edit'){
+if ($postAction === 'Edit'){
     $id = $_POST['id'];
     $ProductName = addslashes(trim($_POST['ProductName']));
     $CatId = $_POST['CatId'];
@@ -291,7 +350,7 @@ if (isset($_FILES['Files'])) {
 <?php
 }
 
-if($_POST['action'] == 'deletePhoto'){
+if ($postAction === 'deletePhoto'){
     $id = $_POST['id'];
     $Photo = $_POST['Photo'];
         $q = "UPDATE tbl_cust_products_2025 SET Photo='' WHERE id=$id";
@@ -301,7 +360,7 @@ if($_POST['action'] == 'deletePhoto'){
 
     echo "Product Photo Delete Successfully";
 } 
-if($_POST['action'] == 'deletePhoto2'){
+if ($postAction === 'deletePhoto2'){
     $id = $_POST['id'];
     $pid = $_POST['pid'];
     $Photo = $_POST['Photo'];
@@ -313,7 +372,7 @@ if($_POST['action'] == 'deletePhoto2'){
     echo "Product Photo Delete Successfully";
 }
 
-if($_POST['action'] == 'showProdImages'){ 
+if ($postAction === 'showProdImages'){ 
     $id = $_POST['id'];
   $sql2 = "SELECT * FROM tbl_cust_product_images WHERE ProductId='$id'";
   $res2 = $conn->query($sql2);
@@ -324,7 +383,8 @@ if($_POST['action'] == 'showProdImages'){
 <div class="ui-feed-icon-container float-left pt-2 mr-3 mb-3"><a href="javascript:void(0)" class="ui-icon ui-feed-icon ion ion-md-close bg-secondary text-white" onclick="delete_photo2(<?php echo $row2["id"]; ?>,<?php echo $_POST["id"]; ?>)"></a><img src="../uploads/<?php echo $row2['Files'];?>" alt="" class="img-fluid ticket-file-img" style="width: 64px;height: 64px;"></div>
 <?php }} } 
 
-if($_POST['action'] == 'savePrint'){ 
+if ($postAction === 'savePrint'){
+    include_once '../../libs/phpqrcode/qrlib.php'; 
     $CellNo = addslashes(trim($_POST['CellNo']));
     $CustId2 = $_POST['CustId'];
     $CustName = addslashes(trim($_POST['CustName']));
@@ -553,7 +613,7 @@ if($Phone!=''){
 }
 
 
-if($_POST['action'] == 'showProduct'){?>
+if ($postAction === 'showProduct'){?>
   
      <?php 
     $catid = $_POST['catid'];
@@ -604,7 +664,7 @@ if($_POST['action'] == 'showProduct'){?>
 }
 
 
-if($_POST['action'] == 'sendSms'){
+if ($postAction === 'sendSms'){
     $id = $_POST['id'];
          $sql = "SELECT * FROM tbl_customer_invoice WHERE id='$id'";
     $row = getRecord($sql);
@@ -626,12 +686,12 @@ if($Phone!=''){
 }
 
 
-if($_POST['action'] == 'countCart'){
+if ($postAction === 'countCart'){
 echo count($_SESSION["cart_item"]);
 
     }
  
- if($_POST['action'] == 'showPendingOrders'){
+ if ($postAction === 'showPendingOrders'){
     $sql = "SELECT * FROM tbl_customer_invoice WHERE Roll=2 AND Status=0";
     if($Roll == 1){
         $sql.=" AND FrId=0";
@@ -652,7 +712,7 @@ echo count($_SESSION["cart_item"]);
     
     
     
-    if($_POST['action'] == 'updatePrint'){ 
+    if ($postAction === 'updatePrint'){ 
     $CellNo = addslashes(trim($_POST['CellNo']));
     $CustId2 = $_POST['CustId'];
     $CustName = addslashes(trim($_POST['CustName']));
@@ -878,7 +938,7 @@ if($Phone!=''){
    //echo 1;    
 }
 
-if($_POST['action'] == 'getProdDetails'){
+if ($postAction === 'getProdDetails'){
     $BarcodeNo = addslashes(trim($_POST['BarcodeNo']));
     $sql = "SELECT * FROM tbl_cust_products_2025 WHERE BarcodeNo='$BarcodeNo'";
     $rncnt = getRow($sql);
@@ -892,7 +952,7 @@ if($_POST['action'] == 'getProdDetails'){
 }
 
 
-if($_POST['action'] == 'searchProduct'){
+if ($postAction === 'searchProduct'){
     $search = mysqli_real_escape_string($conn, $_POST["query"]);
     ?>
     <div class="gallery-sizer col-sm-6 col-md-6 col-3 col-xl-3 position-absolute"></div>

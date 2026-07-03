@@ -681,7 +681,6 @@ document.addEventListener("DOMContentLoaded", function() {
     $(document).ready(function() {
         //$(document).on("click", ".btn-finish", function(event){
         $('#validation-form').on('submit', function(e) {
-            exit();
             e.preventDefault();
             if ($('#validation-form').valid()) {
 

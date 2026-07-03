@@ -5,6 +5,7 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage="Raw-Products";
 $Page = "Add-Raw-Products";
+$id = $_GET['id'] ?? '';
 
 ?>
 <!DOCTYPE html>
@@ -46,17 +47,30 @@ z-index: 2;
 
 
 <?php 
-$id = $_GET['id'];
-$sql7 = "SELECT * FROM tbl_cust_products2 WHERE id='$id'";
-$res7 = $conn->query($sql7);
-$row7 = $res7->fetch_assoc();
+$row7 = [];
+if ($id !== '') {
+    $sql7 = "SELECT * FROM tbl_cust_products2 WHERE id='$id'";
+    $res7 = $conn->query($sql7);
+    $fetched = $res7 ? $res7->fetch_assoc() : null;
+    if (is_array($fetched)) {
+        $row7 = $fetched;
+    }
+}
+$row7Defaults = [
+    'ProductName' => '', 'PurchasePrice' => '', 'MinQty' => '', 'Qty' => '',
+    'Unit' => '', 'CatId' => '', 'SubCatId' => '', 'OldNew' => '1', 'Status' => '1',
+];
+$row7 = array_merge($row7Defaults, $row7);
 
-$sql33 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE ProdId='$id'";
-$rncnt33 = getRow($sql33);
+$rncnt33 = 0;
+if ($id !== '') {
+    $sql33 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE ProdId='$id'";
+    $rncnt33 = getRow($sql33);
+}
 
 $query22 = "SELECT count(*) as totrec FROM tbl_raw_prod_make_qty_2025 WHERE RawProdId = '$id'";
 $data22 = getRecord($query22);
-$row_cnt = $data22['totrec'] + 1;
+$row_cnt = (int)($data22['totrec'] ?? 0) + 1;
 ?>
 
 <?php
@@ -109,7 +123,7 @@ if (isset($_POST['submit'])) {
         // Begin Transaction 🚀
         $conn->begin_transaction();
 
-        if ($_GET['id'] == '') {
+        if ($id === '') {
             // --- INSERT NEW PRODUCT ---
             $qx = "INSERT INTO tbl_cust_products2 
             SET PurchasePrice='$PurchasePrice', MinQty='$MinQty', Qty='$Qty',
@@ -168,7 +182,6 @@ if (isset($_POST['submit'])) {
             echo "<script>alert('Raw Product Added Successfully!');window.location.href='view-raw-products.php';</script>";
         } else {
             // --- UPDATE EXISTING PRODUCT ---
-            $id = $_GET['id'];
 
             $query2 = "UPDATE tbl_cust_products2 
             SET PurchasePrice='$PurchasePrice', MinQty='$MinQty', Qty='$Qty',

@@ -121,7 +121,21 @@ $Page2 = "Pincode";
 </div>
 </div>
 <div class="card">
-<div class="card-datatable table-responsive" id="custresult">
+<div class="card-datatable table-responsive">
+<table id="example" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+        <thead>
+            <tr>
+              <th>#</th>
+              <th>Country</th>
+              <th>State</th>
+              <th>City</th>
+              <th>PinCode</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 </div>
 </div>
 </div>
@@ -141,27 +155,45 @@ $Page2 = "Pincode";
 
 <?php include_once 'footer_script.php'; ?>
 <script type="text/javascript">
-function category_lists(){
-      $.ajax({
-  type: "POST",
-  url: "ajax_files/ajax_pincode.php?action=view",
-  data: {},
-  dataType: "html",
-  success: function(data){
-      $('#custresult').html(data);
-      if (typeof $.fn.DataTable !== 'undefined' && $('#example').length) {
-        $('#example').DataTable({
-          scrollX: true,
-          dom: 'Bfrtip',
-          buttons: ['excelHtml5']
+var pincodeTable;
+
+function initPincodeTable() {
+  if ($.fn.DataTable.isDataTable('#example')) {
+    $('#example').DataTable().ajax.reload(null, false);
+    return;
+  }
+  pincodeTable = $('#example').DataTable({
+    processing: true,
+    serverSide: true,
+    scrollX: true,
+    pageLength: 25,
+    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+    dom: 'Bfrtip',
+    buttons: ['excelHtml5'],
+    ajax: {
+      url: 'ajax_files/ajax_pincode.php?action=load',
+      type: 'POST',
+      error: function() {
+        $.growl.error({
+          title: 'Error',
+          message: 'Could not load pincodes. Please refresh the page.'
         });
       }
-  },
-  error: function(){
-      $('#custresult').html('<div class="alert alert-danger">Could not load pincodes. Refresh the page.</div>');
-  }
+    },
+    order: [[0, 'desc']],
+    columnDefs: [
+      { orderable: false, searchable: false, targets: 6 }
+    ]
   });
-    }
+}
+
+function reloadPincodeTable() {
+  if (pincodeTable) {
+    pincodeTable.ajax.reload(null, false);
+  } else {
+    initPincodeTable();
+  }
+}
     function getState(CountryId,StateId){
       var action = "getState";
         $.ajax({
@@ -215,7 +247,7 @@ function update_toast(){
   }
 
   $(document).ready(function() {
-      category_lists();
+      initPincodeTable();
 
  $(document).on("change", "#CountryId", function(event){
   var val = this.value;
@@ -291,7 +323,7 @@ function update_toast(){
                       error_toast();
                       $('.insert_frm').modal('show'); 
                     }
-                  category_lists();
+                  reloadPincodeTable();
                       $('#submit').attr('disabled',false);
                        $('#submit').text('Submit');
                         $('#action').val("Add");  
@@ -334,7 +366,7 @@ else{
                  var StateId = data.StateId;
                  var CityId = data.CityId;
                  getState(CountryId,StateId); 
-                 getCity(CountryId,StateId,CityId); 
+                 getCity(StateId, CityId); 
                   
                      $('#action').val('Edit'); 
                    
@@ -374,7 +406,7 @@ else{
                 success:function(data){
               swal("Deleted!", "Pincode has been deleted.", "success");
               
-              category_lists();
+              reloadPincodeTable();
 
                      }  
            });
@@ -403,7 +435,7 @@ if(confirm("Are you sure you want to delete Photo?"))
     {
       $('#show_photo').hide();
       $('#OldPhoto').val('');
-     category_lists();
+     reloadPincodeTable();
       var isRtl = $('body').attr('dir') === 'rtl' || $('html').attr('dir') === 'rtl';
    $.growl.success({
       title:    'Success',

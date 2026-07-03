@@ -5,6 +5,23 @@ include_once 'auth.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Report";
 $Page = "Daily-Sale-Report-2";
+$filterFromDate = $_REQUEST['FromDate'] ?? '';
+$filterToDate = $_REQUEST['ToDate'] ?? '';
+$filterZoneId = $_REQUEST['ZoneId'] ?? '';
+$filterSubZoneId = $_REQUEST['SubZoneId'] ?? '';
+$filterZoneName = $_REQUEST['zonename'] ?? '';
+$filterSubZoneName = $_REQUEST['subzonename'] ?? '';
+$filterQtyType = $_REQUEST['QtyType'] ?? '0';
+$filterSearch = $_REQUEST['Search'] ?? '';
+$adminRow = $_SESSION['Admin'] ?? [];
+include_once 'shop_admin_helper.php';
+if (isShopAdmin($adminRow['Roll'] ?? 0)) {
+    shopAdminEnforceZoneAccess((int)$filterZoneId, $adminRow);
+    if ($filterSubZoneId !== '') {
+        shopAdminEnforceSubZoneAccess((int)$filterSubZoneId, $adminRow);
+    }
+}
+$MainPage = "Top-Sell-Dashboard";
 ?>
 <!DOCTYPE html>
 <html lang="en" class="default-style">
@@ -35,7 +52,7 @@ $Page = "Daily-Sale-Report-2";
 <div class="layout-content">
 
 <div class="container-fluid flex-grow-1 container-p-y">
-<h4 class="font-weight-bold py-3 mb-0">Top Selling Product Of <?php echo $_GET['zonename'];?> - <?php echo $_GET['subzonename'];?>
+<h4 class="font-weight-bold py-3 mb-0">Top Selling Product Of <?php echo htmlspecialchars($filterZoneName, ENT_QUOTES, 'UTF-8');?><?php if ($filterSubZoneName !== '') { ?> - <?php echo htmlspecialchars($filterSubZoneName, ENT_QUOTES, 'UTF-8'); ?><?php } ?>
   
 </h4>
 
@@ -65,26 +82,30 @@ $Page = "Daily-Sale-Report-2";
 
 <div class="form-group col-md-2">
 <label class="form-label">From Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_REQUEST['FromDate'] ?>" autocomplete="off" required>
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo htmlspecialchars($filterFromDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" required>
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_REQUEST['ToDate'] ?>" autocomplete="off" required>
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo htmlspecialchars($filterToDate, ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off" required>
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">Show Qty</label>
 <select class="form-control" name="QtyType">
-    <option value="0" <?php if($_REQUEST['QtyType'] == 0){?> selected <?php } ?>>All</option>
-    <option value="1" <?php if($_REQUEST['QtyType'] == 1){?> selected <?php } ?>>Zero</option>
-    <option  value="2" <?php if($_REQUEST['QtyType'] == 2){?> selected <?php } ?>>Non-Zero</option>
+    <option value="0" <?php if($filterQtyType == 0 || $filterQtyType === '0'){?> selected <?php } ?>>All</option>
+    <option value="1" <?php if($filterQtyType == 1 || $filterQtyType === '1'){?> selected <?php } ?>>Zero</option>
+    <option  value="2" <?php if($filterQtyType == 2 || $filterQtyType === '2'){?> selected <?php } ?>>Non-Zero</option>
 </select>
 </div>
 <input type="hidden" name="Search" value="Search">
+<input type="hidden" name="ZoneId" value="<?php echo htmlspecialchars($filterZoneId, ENT_QUOTES, 'UTF-8'); ?>">
+<input type="hidden" name="SubZoneId" value="<?php echo htmlspecialchars($filterSubZoneId, ENT_QUOTES, 'UTF-8'); ?>">
+<input type="hidden" name="zonename" value="<?php echo htmlspecialchars($filterZoneName, ENT_QUOTES, 'UTF-8'); ?>">
+<input type="hidden" name="subzonename" value="<?php echo htmlspecialchars($filterSubZoneName, ENT_QUOTES, 'UTF-8'); ?>">
 <div class="form-group col-md-1" style="padding-top:25px;">
     <label class="form-label">&nbsp;</label>
 <button type="submit" name="submit" class="btn btn-primary btn-finish">Search</button>
 </div>
-<?php if(isset($_REQUEST['Search'])) {?>
+<?php if($filterSearch !== '') {?>
 <div class="form-group col-md-1">
 <label class="form-label">&nbsp;</label>
 <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
@@ -97,8 +118,11 @@ $Page = "Daily-Sale-Report-2";
                                         </div>
                                     </div>
    </div>
-   <?php if($_REQUEST['Search']=='Search') {
-    $SubZoneId = $_GET['SubZoneId'];?>
+   <?php if($filterSearch === 'Search') {
+    $SubZoneId = $filterSubZoneId;
+    $ZoneId = $filterZoneId;
+    $QtyType = (int)$filterQtyType;
+?>
 <div class="card-datatable table-responsive">
 
 
@@ -121,9 +145,7 @@ $Page = "Daily-Sale-Report-2";
     <tbody>
         
             <?php 
-            $ZoneId = $_GET['ZoneId'];
-            $SubZoneId = $_GET['SubZoneId'];
-            if($SubZoneId!=''){
+            if($SubZoneId !== ''){
             $sql = "SELECT ts.*,tz.Name As ZoneName FROM tbl_sub_zone ts INNER JOIN tbl_zone tz ON ts.CatId=tz.id WHERE tz.id='$ZoneId' AND ts.id='$SubZoneId'";
             }
             else{
@@ -131,32 +153,35 @@ $Page = "Daily-Sale-Report-2";
             }
             $row = getList($sql);
             foreach($row as $result){
-                if($SubZoneId!=''){
+                if($SubZoneId !== ''){
             $sql2 = "SELECT GROUP_CONCAT(id) AS id FROM `tbl_users_bill` WHERE ZoneId='$ZoneId' AND SubZoneId='$SubZoneId' AND Roll=5 AND Status=1";
                 }
             else{
              $sql2 = "SELECT GROUP_CONCAT(id) AS id FROM `tbl_users_bill` WHERE ZoneId='$ZoneId' AND Roll=5 AND Status=1";
             }
             $row2 = getRecord($sql2);
-            $frids = $row2['id'];
+            $frids = shopAdminFilterFrIds($row2['id'] ?? '', $adminRow);
+            if ($frids === '') {
+                continue;
+            }
             
-            $sql21 = "SELECT ProdId,ProductName,PurchasePrice,MinPrice FROM tbl_cust_products_2025 WHERE CreatedBy IN($frids) AND checkstatus=1 AND delete_flag=0 GROUP BY ProdId";
+            $sql21 = "SELECT ProdId, MAX(ProductName) AS ProductName, MAX(PurchasePrice) AS PurchasePrice, MAX(MinPrice) AS MinPrice FROM tbl_cust_products_2025 WHERE CreatedBy IN($frids) AND checkstatus=1 AND delete_flag=0 GROUP BY ProdId";
      $row21 = getList($sql21);
      foreach($row21 as $result2){
          
          $sql22 = "SELECT IFNULL(SUM(tcid.Total), 0) AS Total,
             IFNULL(SUM(tcid.Qty), 0) AS TotProd FROM tbl_customer_invoice_details_2025 tcid INNER JOIN tbl_customer_invoice_2025 tci ON tci.id=tcid.InvId WHERE tcid.MainProdId='".$result2['ProdId']."' AND tci.FrId IN ($frids)";
                 
-                if($_REQUEST['FromDate']){
-                $FromDate = $_REQUEST['FromDate'];
+                if(!empty($filterFromDate)){
+                $FromDate = $filterFromDate;
                 $sql22.= " AND tci.InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
-                $ToDate = $_REQUEST['ToDate'];
+            if(!empty($filterToDate)){
+                $ToDate = $filterToDate;
                 $sql22.= " AND tci.InvoiceDate<='$ToDate'";
             }
             $row22 = getRecord($sql22);
-            if($_REQUEST['QtyType']==0){?>
+            if($QtyType === 0){?>
             <tr>
               <td><?php echo $result['ZoneName'];?></td>
                <?php if($SubZoneId!=''){?>
@@ -168,7 +193,7 @@ $Page = "Daily-Sale-Report-2";
              <td><?php echo $result2['MinPrice'];?></td>
              <!-- <td></td>-->
              </tr>
-             <?php } else if($_REQUEST['QtyType']==2) {
+             <?php } else if($QtyType === 2) {
                  if($row22['TotProd'] > 0){
             ?>
             <tr>
@@ -223,25 +248,26 @@ $Page = "Daily-Sale-Report-2";
     </div>
     
     <?php
-$ZoneId = $_GET['ZoneId'] ?? '';
-$SubZoneId = $_GET['SubZoneId'] ?? '';
+$ZoneId = $filterZoneId;
+$SubZoneId = $filterSubZoneId;
 
 $productData = [];
 
-if (!empty($SubZoneId)) {
-    $sql = "SELECT ts.*, tz.Name AS ZoneName 
-            FROM tbl_sub_zone ts 
-            INNER JOIN tbl_zone tz ON ts.CatId = tz.id 
-            WHERE tz.id = '$ZoneId' AND ts.id = '$SubZoneId'";
-} else {
-    $sql = "SELECT tz.id, tz.Name AS ZoneName 
-            FROM tbl_zone tz 
-            WHERE tz.id = '$ZoneId'";
-}
+if ($ZoneId !== '') {
+    if ($SubZoneId !== '') {
+        $sql = "SELECT ts.*, tz.Name AS ZoneName 
+                FROM tbl_sub_zone ts 
+                INNER JOIN tbl_zone tz ON ts.CatId = tz.id 
+                WHERE tz.id = '$ZoneId' AND ts.id = '$SubZoneId'";
+    } else {
+        $sql = "SELECT tz.id, tz.Name AS ZoneName 
+                FROM tbl_zone tz 
+                WHERE tz.id = '$ZoneId'";
+    }
 
-$zoneRows = getList($sql);
+    $zoneRows = getList($sql);
 
-foreach ($zoneRows as $zone) {
+    foreach ($zoneRows as $zone) {
     if (!empty($SubZoneId)) {
         $sql2 = "SELECT GROUP_CONCAT(id) AS id 
                  FROM tbl_users_bill 
@@ -253,11 +279,11 @@ foreach ($zoneRows as $zone) {
     }
 
     $frData = getRecord($sql2);
-    $frids = $frData['id'];
+    $frids = shopAdminFilterFrIds($frData['id'] ?? '', $adminRow);
 
-    if (!$frids) continue;
+    if ($frids === '') continue;
 
-    $sqlProd = "SELECT ProdId, ProductName 
+    $sqlProd = "SELECT ProdId, MAX(ProductName) AS ProductName 
                 FROM tbl_cust_products_2025 
                 WHERE CreatedBy IN ($frids) AND checkstatus = 1 AND delete_flag = 0 
                 GROUP BY ProdId";
@@ -271,12 +297,12 @@ foreach ($zoneRows as $zone) {
                      INNER JOIN tbl_customer_invoice_2025 tci ON tci.id = tcid.InvId 
                      WHERE tcid.MainProdId = '{$prod['ProdId']}' AND tci.FrId IN ($frids)";
 
-        if (!empty($_REQUEST['FromDate'])) {
-            $FromDate = $_REQUEST['FromDate'];
+        if (!empty($filterFromDate)) {
+            $FromDate = $filterFromDate;
             $sqlSales .= " AND tci.InvoiceDate >= '$FromDate'";
         }
-        if (!empty($_REQUEST['ToDate'])) {
-            $ToDate = $_REQUEST['ToDate'];
+        if (!empty($filterToDate)) {
+            $ToDate = $filterToDate;
             $sqlSales .= " AND tci.InvoiceDate <= '$ToDate'";
         }
 
@@ -288,6 +314,7 @@ foreach ($zoneRows as $zone) {
                 'qty' => (int)$salesData['TotProd']
             ];
         }
+    }
     }
 }
 
@@ -410,7 +437,7 @@ new Chart(doughnutCtx, {
     $('#example').DataTable({
          "scrollX": true,
          "pageLength":50,
-         <?php if($_GET['SubZoneId']!=''){?>
+         <?php if($filterSubZoneId !== ''){?>
          order: [[3, 'desc']],
          <?php } else {?>
       order: [[2, 'desc']],

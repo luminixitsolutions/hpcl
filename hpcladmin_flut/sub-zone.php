@@ -5,8 +5,8 @@ include_once 'auth.php';
 $MainPage="Dashboard";
 $Page = "Dashboard";
 $user_id = $_SESSION['Admin']['id'];
-$uid = $_REQUEST['uid']; 
-if($_REQUEST['uid'] == ''){
+$uid = $_REQUEST['uid'] ?? $_REQUEST['user_id'] ?? '';
+if ($uid == '') {
 $sql11 = "SELECT * FROM tbl_users WHERE id='$user_id'";
 $row = getRecord($sql11);
 $_SESSION['Admin'] = $row;
@@ -18,6 +18,11 @@ $_SESSION['Admin'] = $row;
 }
 //echo $sql11;
 $Roll = $row['Roll'];
+$CocoFranchiseAccess = $row['CocoFranchiseAccess'] ?? '';
+include_once 'shop_admin_helper.php';
+if (isShopAdmin($Roll)) {
+    shopAdminEnforceZoneAccess((int)($_GET['zoneid'] ?? 0), $row);
+}
 include_once 'report_filter_session.php';
 /*function RandomStringGenerator($n)
 {
@@ -396,7 +401,7 @@ foreach($row as $result){
         //echo $sql;
      $res2 = $conn->query($sql);
     $row2 = $res2->fetch_assoc();
-    return $row2['result'];
+    return (float)($row2['result'] ?? 0);
     }
 
 function subzone_invoice_date_clause($Calendar) {
@@ -446,11 +451,15 @@ function subzone_dealer_net_amount($frid, $Calendar) {
  $sql = "SELECT * FROM tbl_sub_zone WHERE CatId='".$_GET['zoneid']."' AND id IN ($subzoneids)"; 
  }
         $row = getList($sql);
+        $rncnt224 = 0;
+        $TotNetAmount = 0;
+        $TotCashAmount = 0;
+        $TotUpiAmount = 0;
         foreach($row as $result){
             $subzoneid = $result['id'];
   $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='".$_GET['zoneid']."'";
   $row77 = getRecord($sql77);
-  $frids = $row77['FrId'];
+  $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
    // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
         continue; 
@@ -518,11 +527,11 @@ function subzone_dealer_net_amount($frid, $Calendar) {
         $sql88.=") as a";
         
    $row88 = getRecord($sql88);
-        $NetAmount = $row88['NetAmount'];
-        $TotNetAmount+=$row88['NetAmount'];
-        $rncnt224+=$row88['TotInv'];
-          $TotCashAmount+=countval('cash_payment',$frids,$Calendar);
-   $TotUpiAmount+=countval('upi_payment',$frids,$Calendar);
+        $NetAmount = (float)($row88['NetAmount'] ?? 0);
+        $TotNetAmount += $NetAmount;
+        $rncnt224 += (int)($row88['TotInv'] ?? 0);
+          $TotCashAmount += countval('cash_payment',$frids,$Calendar);
+   $TotUpiAmount += countval('upi_payment',$frids,$Calendar);
         
         $zoneid = $_GET['zoneid'];
          $sql3 = "SELECT count(*) AS TotFr FROM tbl_users_bill tu WHERE tu.SubZoneId='$subzoneid' AND tu.ZoneId = '$zoneid' AND tu.Status=1 AND tu.Roll=5";
@@ -635,7 +644,11 @@ $sql22 = "SELECT IFNULL(SUM(tc.Total),0) AS NetAmount, IFNULL(SUM(tc.Qty),0) AS 
 $row22 = getRecord($sql22);
 
         $zoneidq = $_GET['zoneid'];
-        $sqlDealersList = "SELECT id, Fname, Lname, ShopName FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='$zoneidq' AND Roll=5 ORDER BY ShopName ASC, Fname ASC";
+        $sqlDealersList = "SELECT id, Fname, Lname, ShopName FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='$zoneidq' AND Roll=5";
+        if (!empty($shopAdminDealerIds = shopAdminDealerIds($row))) {
+            $sqlDealersList .= " AND id IN (" . implode(',', $shopAdminDealerIds) . ")";
+        }
+        $sqlDealersList .= " ORDER BY ShopName ASC, Fname ASC";
         $dealerList = getList($sqlDealersList);
         $dealersModalRows = [];
         foreach ($dealerList as $dr) {
@@ -658,7 +671,7 @@ $row22 = getRecord($sql22);
                                 <div class="row align-items-center">
                                     <div class="col align-self-center pr-0" width="80%">
                                         <h6 class=" mb-1" style="color:black;font-size:14px;font-weight:500;"><?php echo $result['Name'];?></h6>
-                                          <span class="small text-secondary" style=""><?php echo $result['Address'];?></span>
+                                          <span class="small text-secondary" style=""><?php echo $result['Address'] ?? '';?></span>
                                           <p class="small " style="text-transform:capitalize;color:black">Franchise : <?php echo $row3['TotFr'];?><br>
                                           Employee : <?php echo $row4['TotEmp'];?> | Salary : <?php echo $row4['MonthlySalary'];?><br> 
                                           Total Invoice : <?php echo $row88['TotInv'];?> <br>
@@ -670,9 +683,9 @@ $row22 = getRecord($sql22);
                                        
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($NetAmount,2);?></strong>
-                                          <br><span style="font-size:12px;">Cash : ₹<?php echo number_format(countval('cash_payment',$frids,$Calendar),2);?></span>
-                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format(countval('upi_payment',$frids,$Calendar),2);?></span>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($NetAmount ?? 0), 2);?></strong>
+                                          <br><span style="font-size:12px;">Cash : ₹<?php echo number_format((float)(countval('cash_payment',$frids,$Calendar) ?? 0), 2);?></span>
+                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format((float)(countval('upi_payment',$frids,$Calendar) ?? 0), 2);?></span>
                                          <?php
 $avg = 0;
 if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
@@ -681,7 +694,7 @@ if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
 ?>
 <br>
 <span style="font-size:12px;">
-    Avg : <?php echo number_format($avg, 2); ?>
+    Avg : <?php echo number_format((float)($avg ?? 0), 2); ?>
 </span>
                                        
                                     </div>
@@ -715,7 +728,7 @@ if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotCashAmount,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($TotCashAmount ?? 0), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -729,7 +742,7 @@ if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotUpiAmount,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($TotUpiAmount ?? 0), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -743,7 +756,7 @@ if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
                                       
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($TotNetAmount,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($TotNetAmount ?? 0), 2);?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -759,7 +772,7 @@ if (!empty($row88['TotInv']) && $row88['TotInv'] != 0) {
                                     <div class="col-auto" align="right" >
                                          <p class="small text-secondary" style="font-size:15px;"><strong><?php
 $avg = ($rncnt224 > 0) ? ($TotNetAmount / $rncnt224) : 0;
-echo number_format($avg, 2);
+echo number_format((float)($avg ?? 0), 2);
 ?></strong></p>
                                     </div> 
                                 </div>
@@ -810,7 +823,7 @@ foreach ($row as $result) {
      $zoneName = $result['Name'];
     $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE SubZoneId='$subzoneid' AND ZoneId='$zoneid' AND Roll=5";
     $row77 = getRecord($sql77);
-    $frids = $row77['FrId'];
+    $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
      // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
         continue;

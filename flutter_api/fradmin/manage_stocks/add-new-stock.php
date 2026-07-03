@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
 include '../config.php';
+include 'batch_helper.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,6 +50,22 @@ include '../config.php';
 
   input.qty-input {
     width: 80px;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid #d5cfff;
+  }
+
+  input.batch-input,
+  select.batch-select {
+    width: 130px;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid #d5cfff;
+    font-size: 13px;
+  }
+
+  input.expiry-input {
+    width: 140px;
     text-align: center;
     border-radius: 8px;
     border: 1px solid #d5cfff;
@@ -127,8 +144,11 @@ include '../config.php';
   <input type="hidden" id="CreatedBy" value="<?php echo $_GET['user_id'] ?? 1; ?>">
 
   <!-- Search -->
-  <div class="mb-3 px-2">
+  <div class="mb-3 px-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
     <input type="text" id="searchInput" class="form-control" placeholder="Search product..." style="width: 50%;">
+    <a href="batch-master.php?user_id=<?php echo (int)($_GET['user_id'] ?? 1); ?>" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-tags"></i> Manage Batch Master
+    </a>
   </div>
 
   <!-- Table -->
@@ -143,6 +163,8 @@ include '../config.php';
           <th>Rate (₹)</th>
           <th>Total Stock</th>
           <th>Qty</th>
+          <th>Batch No</th>
+          <th>Expiry</th>
           <th>Total (₹)</th>
         </tr>
       </thead>
@@ -150,6 +172,7 @@ include '../config.php';
 
 <?php
 $FrId = $_REQUEST['user_id'] ?? 1;
+$batchOptionsHtml = buildBatchSelectOptions($conn, $FrId);
 
 /* STOCK QUERY */
 $stockArr = [];
@@ -190,11 +213,13 @@ echo "
   <td class='rate'>{$r['MinPrice']}</td>
   <td class='stock'>{$stock}</td>
   <td><input type='number' class='qty-input' min='0' value='0'></td>
+  <td><select class='batch-select form-select form-select-sm'>{$batchOptionsHtml}</select></td>
+  <td><input type='date' class='expiry-input'></td>
   <td class='total'>0.00</td>
 </tr>";
     }
 } else {
-    echo "<tr class='no-data'><td colspan='6' class='text-center'>No products found.</td></tr>";
+    echo "<tr class='no-data'><td colspan='10' class='text-center'>No products found.</td></tr>";
 }
 ?>
       </tbody>
@@ -259,7 +284,7 @@ function paginateTable() {
     if (totalRows === 0) {
         $('#productTable tbody').append(
             `<tr class='no-results'>
-                <td colspan='6' class='text-center'>No matching products.</td>
+                <td colspan='10' class='text-center'>No matching products.</td>
             </tr>`
         );
         $('#pagination').empty();
@@ -303,6 +328,10 @@ $(document).on("input", ".qty-input", function () {
 
     // qty > 0 → check row
     row.find(".row-check").prop("checked", qty > 0);
+    if (qty === 0) {
+        row.find(".batch-select").val('');
+        row.find(".expiry-input").val('');
+    }
 
     calculateGrandTotal();
 });
@@ -316,6 +345,8 @@ $(document).on("change", ".row-check", function () {
         if (parseFloat(qtyInput.val()) === 0) qtyInput.val(1);
     } else {
         qtyInput.val(0);
+        row.find(".batch-select").val('');
+        row.find(".expiry-input").val('');
     }
 
     const qty = parseFloat(qtyInput.val()) || 0;
@@ -323,6 +354,15 @@ $(document).on("change", ".row-check", function () {
     row.find(".total").text((qty * rate).toFixed(2));
 
     calculateGrandTotal();
+});
+
+/* -------------------- BATCH SELECT -------------------- */
+$(document).on("change", ".batch-select", function () {
+    const row = $(this).closest("tr");
+    const expDate = $(this).find("option:selected").data("expdate") || '';
+    if (expDate) {
+        row.find(".expiry-input").val(expDate);
+    }
 });
 
 /* -------------------- SELECT ALL -------------------- */
@@ -342,6 +382,8 @@ $('#selectAll').on('change', function () {
             if (parseFloat(qtyInput.val()) === 0) qtyInput.val(1);
         } else {
             qtyInput.val(0);
+            row.find(".batch-select").val('');
+            row.find(".expiry-input").val('');
         }
 
         const qty = parseFloat(qtyInput.val()) || 0;
@@ -381,7 +423,9 @@ $("#submitOrder").click(function () {
                 mainProdId: row.data("mainprodid"),
                 qty: qty,
                 price: price,
-                total: qty * price
+                total: qty * price,
+                batchNo: row.find(".batch-select").val(),
+                expDate: row.find(".expiry-input").val()
             });
         }
     });

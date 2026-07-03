@@ -5,8 +5,8 @@ include_once 'auth.php';
 $MainPage="Dashboard";
 $Page = "Dashboard";
 $user_id = $_SESSION['Admin']['id'];
-$uid = $_REQUEST['uid']; 
-if($_REQUEST['uid'] == ''){
+$uid = $_REQUEST['uid'] ?? $_REQUEST['user_id'] ?? '';
+if ($uid == '') {
 $sql11 = "SELECT * FROM tbl_users WHERE id='$user_id'";
 $row = getRecord($sql11);
 $_SESSION['Admin'] = $row;
@@ -18,6 +18,15 @@ $_SESSION['Admin'] = $row;
 }
 //echo $sql11;
 $Roll = $row['Roll'];
+$CocoFranchiseAccess = $row['CocoFranchiseAccess'] ?? '';
+include_once 'shop_admin_helper.php';
+if (isShopAdmin($Roll)) {
+    $MainPage = "Top-Sell-Dashboard";
+}
+include_once 'report_filter_session.php';
+if (empty($_REQUEST['calendar'])) {
+    $_REQUEST['calendar'] = 'Today';
+}
 
 ?>
 <!DOCTYPE html>
@@ -172,7 +181,6 @@ $Roll = $row['Roll'];
 <div class="container-fluid flex-grow-1 container-p-y">
 <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
 </div>
-<?php  $_SESSION['Calendar']=$_POST['calendar'];?>
  <h3>Welcome To Mahabuddy</h3>       
 <div class="row">
      <div class="col-lg-12">
@@ -187,23 +195,23 @@ $Roll = $row['Roll'];
                                             <label class="form-label">Select Report</label>
                                             <select class="form-control" id="ReportType" name="calendar" onchange="showdate(this.value)">
                                                
-                                                <option value="Today" <?php if ($_SESSION['Calendar'] == 'Today') { ?> selected <?php } ?>>Today</option>
-                                                <option <?php if ($_SESSION['Calendar'] == 'yesterday') { ?> selected <?php } ?> value="yesterday">Yesterday</option>
-                                                <option <?php if ($_SESSION['Calendar'] == 'week') { ?> selected <?php } ?> value="week">This Week</option>
-                                                <option <?php if ($_SESSION['Calendar'] == 'month') { ?> selected <?php } ?> value="month">This Month</option>
-                                                 <option <?php if ($_SESSION['Calendar'] == 'custom') { ?> selected <?php } ?> value="custom">Custom</option>
+                                                <option value="Today" <?php if ($_REQUEST['calendar'] == 'Today') { ?> selected <?php } ?>>Today</option>
+                                                <option <?php if ($_REQUEST['calendar'] == 'yesterday') { ?> selected <?php } ?> value="yesterday">Yesterday</option>
+                                                <option <?php if ($_REQUEST['calendar'] == 'week') { ?> selected <?php } ?> value="week">This Week</option>
+                                                <option <?php if ($_REQUEST['calendar'] == 'month') { ?> selected <?php } ?> value="month">This Month</option>
+                                                 <option <?php if ($_REQUEST['calendar'] == 'custom') { ?> selected <?php } ?> value="custom">Custom</option>
                                                
                                             </select>
                                             <div class="clearfix"></div>
                                         </div>
 
-<div class="form-group col-md-2 customfmdt" <?php if ($_SESSION['Calendar'] == 'Custom') { ?> style="display:block;" <?php } else {?> style="display:none;" <?php } ?>>
+<div class="form-group col-md-2 customfmdt" <?php if ($_REQUEST['calendar'] == 'custom') { ?> style="display:block;" <?php } else {?> style="display:none;" <?php } ?>>
 <label class="form-label">From Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_POST['FromDate'] ?>" autocomplete="off">
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo htmlspecialchars($_REQUEST['FromDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
-<div class="form-group col-md-2 customtodt" <?php if ($_SESSION['Calendar'] == 'Custom') { ?> style="display:block;" <?php } else {?> style="display:none;" <?php } ?>>
+<div class="form-group col-md-2 customtodt" <?php if ($_REQUEST['calendar'] == 'custom') { ?> style="display:block;" <?php } else {?> style="display:none;" <?php } ?>>
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_POST['ToDate'] ?>" autocomplete="off">
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo htmlspecialchars($_REQUEST['ToDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
 </div>
 
 <input type="hidden" name="Search" value="Search">
@@ -211,10 +219,10 @@ $Roll = $row['Roll'];
     <label class="form-label">&nbsp;</label>
 <button type="submit" name="submit" class="btn btn-primary btn-finish">Search</button>
 </div>
-<?php if(isset($_POST['Search'])) {?>
+<?php if(isset($_REQUEST['Search']) || (isset($_REQUEST['calendar']) && $_REQUEST['calendar'] !== '')) {?>
 <div class="form-group col-md-1">
 <label class="form-label">&nbsp;</label>
-<a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
+<a href="<?php echo $report_filter_clear_url; ?>" class="btn btn-info btn-block" data-toggle="tooltip" data-placement="top" data-original-title="Clear Filter">X</a>
 </div>
 <?php } ?>
 </div>
@@ -244,7 +252,7 @@ function buildDateCondition($column, $calendar, $from, $to) {
             $today = date('Y-m-d');
             $condition = " AND $column >= '$monthStart' AND $column <= '$today'";
             break;
-        case 'Custom':
+        case 'custom':
             if (!empty($from)) $condition .= " AND $column >= '$from'";
             if (!empty($to)) $condition .= " AND $column <= '$to'";
             break;
@@ -279,12 +287,12 @@ function buildDateCondition($column, $calendar, $from, $to) {
             $Week = date('Y-m')."-01";
             $sql.=" AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
         }
-        else if($Calendar == 'Custom'){
-        if($_REQUEST['FromDate']){
+        else if($Calendar == 'custom'){
+        if(!empty($_REQUEST['FromDate'])){
                 $FromDate = $_REQUEST['FromDate'];
                 $sql.= " AND InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
+            if(!empty($_REQUEST['ToDate'])){
                 $ToDate = $_REQUEST['ToDate'];
                 $sql.= " AND InvoiceDate<='$ToDate'";
             }
@@ -315,12 +323,12 @@ function buildDateCondition($column, $calendar, $from, $to) {
             $Week = date('Y-m')."-01";
             $sql.=" AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
         }
-        else if($Calendar == 'Custom'){
-        if($_REQUEST['FromDate']){
+        else if($Calendar == 'custom'){
+        if(!empty($_REQUEST['FromDate'])){
                 $FromDate = $_REQUEST['FromDate'];
                 $sql.= " AND InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
+            if(!empty($_REQUEST['ToDate'])){
                 $ToDate = $_REQUEST['ToDate'];
                 $sql.= " AND InvoiceDate<='$ToDate'";
             }
@@ -332,7 +340,7 @@ function buildDateCondition($column, $calendar, $from, $to) {
         //echo $sql;
      $res2 = $conn->query($sql);
     $row2 = $res2->fetch_assoc();
-    return $row2['result'];
+    return (float)($row2['result'] ?? 0);
     }
     ?>
                   <?php 
@@ -350,6 +358,10 @@ function buildDateCondition($column, $calendar, $from, $to) {
      }
  }
         $row = getList($sql);
+        $rncnt224 = 0;
+        $TotNetAmount = 0;
+        $TotCashAmount = 0;
+        $TotUpiAmount = 0;
         foreach($row as $result){
             $zoneid = $result['id'];
   /*$sql77 = "SELECT * FROM tbl_assign_fr_to_zone WHERE zone='$zoneid'";
@@ -362,14 +374,14 @@ function buildDateCondition($column, $calendar, $from, $to) {
   }*/
      $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE ZoneId='$zoneid' AND Roll=5";
   $row77 = getRecord($sql77);
-  $frids = $row77['FrId'];
+  $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
   
   // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
         continue;
     }
     
-   $Calendar = $_SESSION['Calendar'];
+   $Calendar = $_REQUEST['calendar'];
    $sql88 = "SELECT SUM(NetAmount) AS NetAmount,SUM(TotInv) AS TotInv FROM (SELECT SUM(NetAmount) AS NetAmount,COUNT(*) AS TotInv  FROM tbl_customer_invoice WHERE FrId IN ($frids)";
     if($Calendar == 'yesterday'){
        
@@ -386,12 +398,12 @@ function buildDateCondition($column, $calendar, $from, $to) {
             $Week = date('Y-m')."-01";
             $sql88.=" AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
         }
-        else if($Calendar == 'Custom'){
-        if($_REQUEST['FromDate']){
+        else if($Calendar == 'custom'){
+        if(!empty($_REQUEST['FromDate'])){
                 $FromDate = $_REQUEST['FromDate'];
                 $sql88.= " AND InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
+            if(!empty($_REQUEST['ToDate'])){
                 $ToDate = $_REQUEST['ToDate'];
                 $sql88.= " AND InvoiceDate<='$ToDate'";
             }
@@ -415,12 +427,12 @@ function buildDateCondition($column, $calendar, $from, $to) {
             $Week = date('Y-m')."-01";
             $sql88.=" AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
         }
-        else if($Calendar == 'Custom'){
-        if($_REQUEST['FromDate']){
+        else if($Calendar == 'custom'){
+        if(!empty($_REQUEST['FromDate'])){
                 $FromDate = $_REQUEST['FromDate'];
                 $sql88.= " AND InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
+            if(!empty($_REQUEST['ToDate'])){
                 $ToDate = $_REQUEST['ToDate'];
                 $sql88.= " AND InvoiceDate<='$ToDate'";
             }
@@ -431,9 +443,9 @@ function buildDateCondition($column, $calendar, $from, $to) {
         $sql88.=") as a";
         //echo $sql88;
    $row88 = getRecord($sql88);
-       $rncnt224+=$row88['TotInv'];
-        $NetAmount = $row88['NetAmount'];
-        $TotNetAmount+=$NetAmount;
+       $rncnt224 += (int)($row88['TotInv'] ?? 0);
+        $NetAmount = (float)($row88['NetAmount'] ?? 0);
+        $TotNetAmount += $NetAmount;
         $TotCashAmount+=countval('cash_payment',$frids,$Calendar);
    $TotUpiAmount+=countval('upi_payment',$frids,$Calendar);
         $sql3 = "SELECT count(*) AS TotFr FROM tbl_users_bill tu WHERE tu.ZoneId = '$zoneid' AND tu.Status=1 AND tu.Roll=5";
@@ -526,12 +538,12 @@ $balance = $netAmount
                    <!-- <a href="product-lists.php?catid=<?php echo $result['id'];?>">-->
                     <div class=" px-0">
                         <ul class="list-group list-group-flush">
-                            <?php if($_GET['value']=='zone'){?>
+                            <?php $pageValue = $_GET['value'] ?? ''; if($pageValue == 'zone'){?>
                             <a href="fr-expense-sale-report.php?Search=Search&FromDate=<?php echo date('Y-m-');?>01&ToDate=<?php echo date('Y-m-d');?>&ZoneId=<?php echo $result['id'];?>">
-                             <?php } else if($_GET['value']=='topsellzone'){?>
+                             <?php } else if($pageValue == 'topsellzone'){?>
                             <a href="zone-subzone-wise-top-sell-dashboard.php?Search=Search&FromDate=<?php echo date('Y-m-d');?>&ToDate=<?php echo date('Y-m-d');?>&ZoneId=<?php echo $result['id'];?>&zonename=<?php echo $result['Name'];?>">
                       
-                      <?php } else if($_GET['value']=='topsellsubzone'){?>
+                      <?php } else if($pageValue == 'topsellsubzone'){?>
                             <a href="top-sell-sub-zone.php?zoneid=<?php echo $result['id'];?>&name=<?php echo $result['Name'];?>">
                                 
                             <?php } else {?>
@@ -543,11 +555,11 @@ $balance = $netAmount
                                 <div class="row align-items-center">
                                     <div class="col align-self-center pr-0" width="80%">
                                         <h6 class=" mb-1" style="color:black;font-size:14px;font-weight:500;"><?php echo $result['Name'];?></h6>
-                                          <span class="small text-secondary" style=""><?php echo $result['Address'];?></span>
+                                          <span class="small text-secondary" style=""><?php echo $result['Address'] ?? '';?></span>
                                           <p class="small " style="text-transform:capitalize;color:black">
                                                Franchise : <?php echo $row3['TotFr'];?><br>
-                                          Employee : <?php echo $row4['TotEmp'];?> | Salary : <?php echo $row4['MonthlySalary'];?><br>
-                                          Total Invoice : <?php echo $row88['TotInv'];?> <br>
+                                          Employee : <?php echo $row4['TotEmp'];?> | Salary : <?php echo number_format((float)($row4['MonthlySalary'] ?? 0), 2);?><br>
+                                          Total Invoice : <?php echo (int)($row88['TotInv'] ?? 0);?> <br>
                                          
                                           <!--Employee Expenses : <?= number_format($emp['TotalExp'] ?? 0, 2) ?><br>
                                           Vendor Expenses : <?= number_format($vendor['TotalVedExp'] ?? 0, 2) ?><br>
@@ -564,9 +576,9 @@ $balance = $netAmount
                                        
                                     </div>
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format($NetAmount,2);?></strong>
-                                          <br><span style="font-size:12px;">Cash : ₹<?php echo number_format(countval('cash_payment',$frids,$Calendar),2);?></span>
-                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format(countval('upi_payment',$frids,$Calendar),2);?></span>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong>&#8377;<?php echo number_format((float)($NetAmount ?? 0), 2);?></strong>
+                                          <br><span style="font-size:12px;">Cash : ₹<?php echo number_format((float)(countval('cash_payment',$frids,$Calendar) ?? 0), 2);?></span>
+                                         <br><span style="font-size:12px;">UPI : ₹<?php echo number_format((float)(countval('upi_payment',$frids,$Calendar) ?? 0), 2);?></span>
                                          <br>
 <span style="font-size:12px;">
 Avg : 
@@ -575,7 +587,7 @@ $avg = 0;
 if(!empty($row88['TotInv']) && $row88['TotInv'] != 0){
     $avg = $NetAmount / $row88['TotInv'];
 }
-echo number_format($avg,2);
+echo number_format((float)($avg ?? 0), 2);
 ?>
 </span>
 </p>
@@ -648,7 +660,10 @@ echo number_format($avg,2);
                                       
                                     </div> 
                                     <div class="col-auto" align="right" >
-                                         <p class="small text-secondary" style="font-size:15px;"><strong><?php echo number_format(($TotNetAmount)/$rncnt224,2);?></strong></p>
+                                         <p class="small text-secondary" style="font-size:15px;"><strong><?php
+$avg = ($rncnt224 > 0) ? ($TotNetAmount / $rncnt224) : 0;
+echo number_format((float)($avg ?? 0), 2);
+?></strong></p>
                                     </div> 
                                 </div>
                             </li>
@@ -712,7 +727,7 @@ foreach ($row as $result) {
     $zoneName = $result['Name'];
    $sql77 = "SELECT GROUP_CONCAT(id) AS FrId FROM tbl_users WHERE ZoneId='$zoneid' AND Roll=5";
     $row77 = getRecord($sql77);
-    $frids = $row77['FrId'];
+    $frids = shopAdminFilterFrIds($row77['FrId'] ?? '', $row);
 
 // ✅ Skip this sub-zone if no FrId found
     if (empty($frids)) {
@@ -720,7 +735,7 @@ foreach ($row as $result) {
     }
     
     
-    $Calendar = $_SESSION['Calendar'];
+    $Calendar = $_REQUEST['calendar'];
     
     $sql88 = "SELECT SUM(NetAmount) AS NetAmount,SUM(TotInv) AS TotInv,SUM(cash) AS TotCash,SUM(upi) AS TotUpi FROM (SELECT SUM(NetAmount) AS NetAmount,COUNT(*) AS TotInv,SUM(CASE WHEN PayType='Cash' THEN NetAmount ELSE 0 END) AS cash, 
                 SUM(CASE WHEN PayType IN ('Phone Pay','Paytm','UPI','Other UPI') THEN NetAmount ELSE 0 END) AS upi  FROM tbl_customer_invoice WHERE FrId IN ($frids)";
@@ -734,12 +749,12 @@ foreach ($row as $result) {
     } else if ($Calendar == 'month') {
         $Week = date('Y-m')."-01";
         $sql88 .= " AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
-    } else if ($Calendar == 'Custom') {
-        if ($_REQUEST['FromDate']) {
+    } else if ($Calendar == 'custom') {
+        if (!empty($_REQUEST['FromDate'])) {
             $FromDate = $_REQUEST['FromDate'];
             $sql88 .= " AND InvoiceDate>='$FromDate'";
         }
-        if ($_REQUEST['ToDate']) {
+        if (!empty($_REQUEST['ToDate'])) {
             $ToDate = $_REQUEST['ToDate'];
             $sql88 .= " AND InvoiceDate<='$ToDate'";
         }
@@ -759,12 +774,12 @@ foreach ($row as $result) {
     } else if ($Calendar == 'month') {
         $Week = date('Y-m')."-01";
         $sql88 .= " AND InvoiceDate>='$Week' AND InvoiceDate<='".date('Y-m-d')."'";
-    } else if ($Calendar == 'Custom') {
-        if ($_REQUEST['FromDate']) {
+    } else if ($Calendar == 'custom') {
+        if (!empty($_REQUEST['FromDate'])) {
             $FromDate = $_REQUEST['FromDate'];
             $sql88 .= " AND InvoiceDate>='$FromDate'";
         }
-        if ($_REQUEST['ToDate']) {
+        if (!empty($_REQUEST['ToDate'])) {
             $ToDate = $_REQUEST['ToDate'];
             $sql88 .= " AND InvoiceDate<='$ToDate'";
         }
@@ -774,7 +789,7 @@ foreach ($row as $result) {
     $sql88.=") as a";
 //echo $sql88;
     $row88 = getRecord($sql88);
-    $NetAmount = $row88['NetAmount'] ?? 0;
+    $NetAmount = (float)($row88['NetAmount'] ?? 0);
     
       
         $sql3 = "SELECT count(*) AS TotFr FROM tbl_users_bill tu WHERE tu.ZoneId = '$zoneid' AND tu.Status=1 AND tu.Roll=5";

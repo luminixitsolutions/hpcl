@@ -165,7 +165,7 @@
 		 * Rewind the Iterator to the first element.
 		 * Similar to the reset() function for arrays in PHP
 		 */ 
-		public function rewind()
+		#[\ReturnTypeWillChange]		public function rewind()
 		{
 			$this -> Index = 0;
 		}
@@ -176,7 +176,7 @@
 		 *
 		 * @return mixed current element from the collection
 		 */
-		public function current()
+		#[\ReturnTypeWillChange]		public function current()
 		{
 			if ($this -> Index == 0)
 			{
@@ -190,7 +190,7 @@
 		 * Move forward to next element. 
 		 * Similar to the next() function for arrays in PHP 
 		 */ 
-		public function next()
+		#[\ReturnTypeWillChange]		public function next()
 		{
 			// Internal counter is advanced here instead of the if statement
 			//	because apparently it's fully possible that an empty row will not be
@@ -228,7 +228,7 @@
 		 *
 		 * @return mixed either an integer or a string
 		 */ 
-		public function key()
+		#[\ReturnTypeWillChange]		public function key()
 		{
 			return $this -> Index;
 		}
@@ -239,7 +239,7 @@
 		 *
 		 * @return boolean FALSE if there's nothing more to iterate over
 		 */ 
-		public function valid()
+		#[\ReturnTypeWillChange]		public function valid()
 		{
 			if ($this -> Error)
 			{
@@ -253,7 +253,7 @@
 		 * Ostensibly should return the count of the contained items but this just returns the number
 		 * of rows read so far. It's not really correct but at least coherent.
 		 */
-		public function count()
+		#[\ReturnTypeWillChange]		public function count()
 		{
 			if ($this -> Error)
 			{
