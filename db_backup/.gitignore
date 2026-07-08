@@ -1,0 +1,6 @@
+.env
+backup-db.log
+*.cnf
+.tmp/
+db_backups/**/*.sql
+!db_backups/.gitkeep
