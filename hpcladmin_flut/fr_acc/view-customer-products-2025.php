@@ -39,6 +39,9 @@ $Page = "View-Customer-Products-2025";
 
 <div class="container-fluid flex-grow-1 container-p-y">
 <h4 class="font-weight-bold py-3 mb-0">View Selling Product List
+<span style="float:right;">
+<a href="add-customer-product-2025.php" class="btn btn-secondary btn-round"><i class="ion ion-md-add mr-2"></i> Add New</a>
+</span>
 </h4>
 
 <div class="card">
@@ -62,7 +65,7 @@ $Page = "View-Customer-Products-2025";
   $row12 = getList($sql12);
   foreach($row12 as $result){
      ?>
-  <option <?php if($_REQUEST["CatId"] == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
+  <option <?php if(($_REQUEST['CatId'] ?? '') == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
     <?php echo $result['Name']; ?></option>
 <?php } ?>
 </select>
@@ -74,11 +77,11 @@ $Page = "View-Customer-Products-2025";
  <select class="select2-demo form-control" name="SubCatId" id="SubCatId">
 <option selected="" value="all">All</option>
  <?php 
-  $sql12 = "SELECT * FROM tbl_cust_sub_category_2025 WHERE Status='1' AND CatId='".$_REQUEST['CatId']."' AND ProdType=0";
+  $sql12 = "SELECT * FROM tbl_cust_sub_category_2025 WHERE Status='1' AND CatId='".($_REQUEST['CatId'] ?? 'all')."' AND ProdType=0";
   $row12 = getList($sql12);
   foreach($row12 as $result){
      ?>
-  <option <?php if($_REQUEST["SubCatId"] == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
+  <option <?php if(($_REQUEST['SubCatId'] ?? '') == $result['id']) {?> selected <?php } ?> value="<?php echo $result['id'];?>">
     <?php echo $result['Name']; ?></option>
 <?php } ?>
 </select>
@@ -89,19 +92,19 @@ $Page = "View-Customer-Products-2025";
 <label class="form-label">Product Type<span class="text-danger">*</span></label>
 <select class="form-control" name="ProdType2" required="">
     <option selected="" value="all">All</option>
-<option value="1" <?php if($_REQUEST["ProdType2"]=='1') {?> selected <?php } ?>>MRP Product</option>
-<option value="2" <?php if($_REQUEST["ProdType2"]=='2') {?> selected <?php } ?>>Making Product</option>
+<option value="1" <?php if(($_REQUEST['ProdType2'] ?? '')=='1') {?> selected <?php } ?>>MRP Product</option>
+<option value="2" <?php if(($_REQUEST['ProdType2'] ?? '')=='2') {?> selected <?php } ?>>Making Product</option>
 <!--<option value="3" <?php if($_REQUEST["ProdType2"]=='3') {?> selected <?php } ?>>Other Product</option>-->
 </select>
 </div>
 
 <div class="form-group col-md-2">
 <label class="form-label"> Date </label>
-<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_REQUEST['FromDate'] ?>" autocomplete="off">
+<input type="date" name="FromDate" id="FromDate" class="form-control" value="<?php echo $_REQUEST['FromDate'] ?? '' ?>" autocomplete="off">
 </div>
 <div class="form-group col-md-2">
 <label class="form-label">To Date</label>
-<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_REQUEST['ToDate'] ?>" autocomplete="off">
+<input type="date" name="ToDate" id="ToDate" class="form-control" value="<?php echo $_REQUEST['ToDate'] ?? '' ?>" autocomplete="off">
 </div>
 
 
@@ -155,7 +158,7 @@ $Page = "View-Customer-Products-2025";
                     LEFT JOIN tbl_cust_category_2025 c ON c.id=p.CatId 
                     LEFT JOIN tbl_cust_sub_category_2025 cs ON cs.id=p.SubCatId WHERE p.CreatedBy='$BillSoftFrId' AND p.ProdType=0 AND p.ProdType2!=3 AND p.delete_flag=0 AND p.checkstatus=1";
                     
-                if($_POST['CatId']){
+                if(!empty($_POST['CatId'])){
                 $CatId = $_POST['CatId'];
                 if($CatId == 'all'){
                     $sql.= " ";
@@ -165,7 +168,7 @@ $Page = "View-Customer-Products-2025";
                 }
             }
             
-            if($_POST['SubCatId']){
+            if(!empty($_POST['SubCatId'])){
                 $SubCatId = $_POST['SubCatId'];
                 if($SubCatId == 'all'){
                     $sql.= " ";
@@ -175,7 +178,7 @@ $Page = "View-Customer-Products-2025";
                 }
             }
             
-            if($_POST['ProdType2']){
+            if(!empty($_POST['ProdType2'])){
                 $ProdType2 = $_POST['ProdType2'];
                 if($ProdType2 == 'all'){
                     $sql.= " ";
@@ -195,11 +198,11 @@ $Page = "View-Customer-Products-2025";
                 
                 $sql2 = "SELECT SUM(tcid.Total) AS Total,SUM(tcid.Qty) AS TotProd FROM tbl_customer_invoice_details_2025 tcid INNER JOIN tbl_customer_invoice_2025 tci ON tci.id=tcid.InvId WHERE tcid.ProdId='".$row['id']."' AND tci.Roll=2 AND tci.FrId='$BillSoftFrId'";
                 
-                if($_REQUEST['FromDate']){
+                if(!empty($_REQUEST['FromDate'])){
                 $FromDate = $_REQUEST['FromDate'];
                 $sql2.= " AND tci.InvoiceDate>='$FromDate'";
             }
-            if($_REQUEST['ToDate']){
+            if(!empty($_REQUEST['ToDate'])){
                 $ToDate = $_REQUEST['ToDate'];
                 $sql2.= " AND tci.InvoiceDate<='$ToDate'";
             }

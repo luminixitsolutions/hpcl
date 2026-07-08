@@ -63,6 +63,17 @@ if($_POST['action'] == 'getSubCat'){?>
     <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
 <?php } }
 
+if($_POST['action'] == 'getSubCat2025'){?>
+    <option value="" selected="selected" disabled="">Select Sub Category</option>
+<?php
+    $DeptId = $_POST['id'] ?? '';
+    $q = "SELECT * FROM tbl_cust_sub_category_2025 WHERE CatId = '$DeptId' AND Status='1' AND ProdType=0 ORDER BY Name";
+    $r = $conn->query($q);
+    while ($rw = $r->fetch_assoc()) {
+?>
+    <option value="<?php echo $rw['id']; ?>"><?php echo $rw['Name']; ?></option>
+<?php } }
+
 if($_POST['action'] == 'getRawSubCat'){?>
     <option value="" selected="selected" disabled="">Select Sub Category</option>
 <?php 

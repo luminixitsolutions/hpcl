@@ -12,24 +12,32 @@ $fr_id = $_SESSION['fr_admin'];
     else{
         $BillSoftFrId = $row77['BillSoftFrId'];
     }
-$StockDate = addslashes(trim($_POST['StockDate']));
+$StockDate = addslashes(trim($_POST['StockDate'] ?? ''));
     $CreatedDate = date('Y-m-d');
-    $Narration = addslashes(trim($_POST['Narration']));
-    $VedId = addslashes(trim($_POST['VedId']));
+    $Narration = addslashes(trim($_POST['Narration'] ?? ''));
+    $VedId = addslashes(trim($_POST['VedId'] ?? ''));
 
+    // Ensure BatchNo column exists (for older DBs)
+    foreach (['tbl_cust_prod_stock_2025', 'tbl_cust_prod_stock_2025_backup'] as $batchTable) {
+        $batchCol = $conn->query("SHOW COLUMNS FROM `$batchTable` LIKE 'BatchNo'");
+        if ($batchCol && $batchCol->num_rows === 0) {
+            $conn->query("ALTER TABLE `$batchTable` ADD COLUMN `BatchNo` varchar(100) DEFAULT NULL AFTER `ExpDate`");
+        }
+    }
 
-        foreach ($_SESSION["cart_item"] as $product) {
+        foreach (($_SESSION["cart_item"] ?? []) as $product) {
             $ProdId = $product['id'];
-    $Qty = addslashes(trim($product['Qty']));
-    $PurchasePrice = addslashes(trim($product['PurchasePrice']));
-    $SellPrice = addslashes(trim($product['SellPrice']));
-    $MfgDate = addslashes(trim($product['MfgDate']));
-    $ExpDate = addslashes(trim($product['ExpDate']));
-     $qx = "INSERT INTO tbl_cust_prod_stock_2025 SET MfgDate='$MfgDate',ExpDate='$ExpDate',VedId='$VedId',ProdId='$ProdId',Qty='$Qty',CreatedBy='$user_id',StockDate='$StockDate',Narration='$Narration',Status='Cr',UserId='$BillSoftFrId',CreatedDate='$CreatedDate',FrId='$BillSoftFrId',PurchasePrice='$PurchasePrice',SellPrice='$SellPrice'";
+    $Qty = addslashes(trim($product['Qty'] ?? ''));
+    $PurchasePrice = addslashes(trim($product['PurchasePrice'] ?? ''));
+    $SellPrice = addslashes(trim($product['SellPrice'] ?? ''));
+    $BatchNo = addslashes(trim($product['BatchNo'] ?? ''));
+    $MfgDate = addslashes(trim($product['MfgDate'] ?? ''));
+    $ExpDate = addslashes(trim($product['ExpDate'] ?? ''));
+     $qx = "INSERT INTO tbl_cust_prod_stock_2025 SET MfgDate='$MfgDate',ExpDate='$ExpDate',BatchNo='$BatchNo',VedId='$VedId',ProdId='$ProdId',Qty='$Qty',CreatedBy='$user_id',StockDate='$StockDate',Narration='$Narration',Status='Cr',UserId='$BillSoftFrId',CreatedDate='$CreatedDate',FrId='$BillSoftFrId',PurchasePrice='$PurchasePrice',SellPrice='$SellPrice'";
        $conn->query($qx);
        $InvId = mysqli_insert_id($conn);
        
-     $qx = "INSERT INTO tbl_cust_prod_stock_2025_backup SET MfgDate='$MfgDate',ExpDate='$ExpDate',VedId='$VedId',ProdId='$ProdId',Qty='$Qty',CreatedBy='$user_id',StockDate='$StockDate',Narration='$Narration',Status='Cr',UserId='$BillSoftFrId',CreatedDate='$CreatedDate',FrId='$BillSoftFrId',PurchasePrice='$PurchasePrice',SellPrice='$SellPrice',orgstockid='$InvId'";
+     $qx = "INSERT INTO tbl_cust_prod_stock_2025_backup SET MfgDate='$MfgDate',ExpDate='$ExpDate',BatchNo='$BatchNo',VedId='$VedId',ProdId='$ProdId',Qty='$Qty',CreatedBy='$user_id',StockDate='$StockDate',Narration='$Narration',Status='Cr',UserId='$BillSoftFrId',CreatedDate='$CreatedDate',FrId='$BillSoftFrId',PurchasePrice='$PurchasePrice',SellPrice='$SellPrice',orgstockid='$InvId'";
   $conn->query($qx);
   
   // Fetch the inserted records

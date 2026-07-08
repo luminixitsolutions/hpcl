@@ -115,6 +115,113 @@ if (isset($_FILES['Files'])) {
 }
 
 
+if ($_POST['action'] == 'Add2025') {
+    function frEsc2025($conn, $val) {
+        return mysqli_real_escape_string($conn, trim((string)$val));
+    }
+    function frRandomCode2025($n) {
+        $domain = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+        $len = strlen($domain);
+        $generated_string = '';
+        for ($i = 0; $i < $n; $i++) {
+            $generated_string .= $domain[rand(0, $len - 1)];
+        }
+        return $generated_string;
+    }
+
+    $fields = [
+        'TempPrdId', 'ProductName', 'CatId', 'SubCatId', 'MinPrice', 'SubTotal', 'DiscPer', 'Discount',
+        'CgstPer', 'SgstPer', 'IgstPer', 'GstAmt', 'ProdPrice', 'CgstAmt', 'SgstAmt', 'IgstAmt',
+        'BarcodeNo', 'StockQty', 'MinQty', 'ProdType2', 'Transfer', 'PurchasePrice', 'Status', 'SrNo'
+    ];
+    foreach ($fields as $field) {
+        $$field = frEsc2025($conn, $_POST[$field] ?? '');
+    }
+
+    if ($ProductName === '' || $CatId === '' || $PurchasePrice === '' || $MinPrice === '') {
+        echo '<script>alert("Please fill required fields."); window.history.back();</script>';
+        exit;
+    }
+
+    if ($SubTotal === '') {
+        $SubTotal = $MinPrice;
+    }
+    if ($DiscPer === '') {
+        $DiscPer = '0';
+    }
+    if ($Discount === '') {
+        $Discount = '0';
+    }
+    if ($SubCatId === '') {
+        $SubCatId = '0';
+    }
+    if ($StockQty === '') {
+        $StockQty = '0';
+    }
+    if ($SrNo === '') {
+        $SrNo = '0';
+    }
+    if ($TempPrdId === '') {
+        $TempPrdId = '0';
+    }
+
+    $CreatedDate = date('Y-m-d');
+    $modified_time = gmdate('Y-m-d H:i:s.') . gettimeofday()['usec'];
+    $Photo = $_POST['OldPhoto'] ?? '';
+    if (!empty($_FILES['Photo']['name'])) {
+        $randno = rand(1, 100);
+        $fnm = str_replace(' ', '_', pathinfo($_FILES['Photo']['name'], PATHINFO_FILENAME));
+        $ext = '.' . pathinfo($_FILES['Photo']['name'], PATHINFO_EXTENSION);
+        $dest = '../../uploads/' . $randno . '_' . $fnm . $ext;
+        if (move_uploaded_file($_FILES['Photo']['tmp_name'], $dest)) {
+            $Photo = $randno . '_' . $fnm . $ext;
+        }
+    }
+
+    $Code = frRandomCode2025(10);
+    $BrandId = 0;
+    $Unit = '';
+    $Division = $Segment = $Family = $ClassId = $McDesc = $BrandDesc = 0;
+
+    $sql = "INSERT INTO tbl_cust_products2 SET ProdId='0', Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId',
+        McDesc='$McDesc', BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer', Discount='$Discount', Unit='$Unit',
+        PurchasePrice='$PurchasePrice', Transfer='$Transfer', ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId',
+        ProductName='$ProductName', CatId='$CatId', MinPrice='$MinPrice', Status='$Status', SrNo='$SrNo', CreatedDate='$CreatedDate',
+        CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice', CgstAmt='$CgstAmt',
+        SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo', StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty',
+        Photo='$Photo', ProdType='0', CreatedBy='$BillSoftFrId', ModifiedBy='0', push_flag='0', delete_flag='0', Assets='0',
+        checkstatus='0', tempstatus='0', CrossSell='0', MatchMrpProdId='0', OldNew='0', allotstatus='0'";
+    $conn->query($sql);
+    $ProdId = $conn->insert_id;
+    $Code2 = $Code . $ProdId;
+    $conn->query("UPDATE tbl_cust_products2 SET code='$Code2' WHERE id='$ProdId'");
+
+    $sql = "INSERT INTO tbl_cust_products_2025 SET ProdId='$ProdId', Division='$Division', Segment='$Segment', Family='$Family', ClassId='$ClassId',
+        McDesc='$McDesc', BrandDesc='$BrandDesc', SubTotal='$SubTotal', DiscPer='$DiscPer', Discount='$Discount', Unit='$Unit',
+        PurchasePrice='$PurchasePrice', Transfer='$Transfer', ProdType2='$ProdType2', BrandId='$BrandId', SubCatId='$SubCatId',
+        ProductName='$ProductName', CatId='$CatId', MinPrice='$MinPrice', Status='$Status', SrNo='$SrNo', CreatedDate='$CreatedDate',
+        CgstPer='$CgstPer', SgstPer='$SgstPer', IgstPer='$IgstPer', GstAmt='$GstAmt', ProdPrice='$ProdPrice', CgstAmt='$CgstAmt',
+        SgstAmt='$SgstAmt', IgstAmt='$IgstAmt', BarcodeNo='$BarcodeNo', StockQty='$StockQty', TempPrdId='$TempPrdId', MinQty='$MinQty',
+        Photo='$Photo', ProdType='0', CreatedBy='$BillSoftFrId', ModifiedBy='0', code='$Code2', checkstatus='1', push_flag='1',
+        delete_flag='0', Assets='0', CrossSell='0', MatchMrpProdId='0', OldNew='0', allotstatus='0', modified_time='$modified_time',
+        QrDisplay='Yes'";
+    $conn->query($sql);
+    $FrProdId = $conn->insert_id;
+
+    if ((int)$StockQty > 0) {
+        $conn->query("INSERT INTO tbl_cust_prod_stock_2025 SET ProdId='$FrProdId', Qty='$StockQty', Status='Cr', CreatedDate='$CreatedDate',
+            Narration='Opening Stock', Main=1, StockDate='$CreatedDate', CreatedBy='$BillSoftFrId', UserId='$BillSoftFrId', FrId='$BillSoftFrId'");
+    }
+?>
+<script type="text/javascript">
+    alert("New Product Added Successfully!");
+    window.location.href="../view-customer-products-2025.php";
+</script>
+<?php
+    exit;
+}
+
+
 if($_POST['action'] == 'Edit'){
     $id = $_POST['id'];
     $ProductName = addslashes(trim($_POST['ProductName']));

@@ -466,6 +466,17 @@ div.scrollmenu a:hover {
 </a>
 </li>
 
+<li class="sidenav-item">
+<a href="batch-master.php" class="sidenav-link">
+<div>Batch Master</div>
+<?php if($Page=='Batch-Master') {?>
+<div class="pl-1 ml-auto">
+<span class="badge badge-dot badge-primary"></span>
+</div>
+<?php } ?>
+</a>
+</li>
+
 <?php } if(in_array("99", $Options)) {?> 
 <!--<li class="sidenav-item">
 <a href="add-cust-stock-by-barcode-2025.php" class="sidenav-link">

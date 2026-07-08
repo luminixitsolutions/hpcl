@@ -2,6 +2,7 @@
 session_start();
 include_once 'config.php';
 include_once 'auth.php';
+include_once __DIR__ . '/../../flutter_api/fradmin/manage_stocks/batch_helper.php';
 $user_id = $_SESSION['Admin']['id'];
 $MainPage = "Customer-Products-2025";
 $Page = "View-Cust-Stocks-2025";
@@ -48,11 +49,20 @@ z-index: 2;
 
 
 <?php 
-$id = $_GET['id'];
-$sql7 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE id='$id'";
-$res7 = $conn->query($sql7);
-$row7 = $res7->fetch_assoc();
+$id = $_GET['id'] ?? '';
+$row7 = [
+    'VedId' => '', 'ProdId' => '', 'Qty' => '', 'MfgDate' => '', 'ExpDate' => '',
+    'SellPrice' => '', 'StockDate' => date('Y-m-d'), 'TotQty' => '', 'Narration' => '', 'BatchNo' => '',
+];
+if ($id !== '') {
+    $sql7 = "SELECT * FROM tbl_cust_prod_stock_2025 WHERE id='$id'";
+    $res7 = $conn->query($sql7);
+    if ($res7 && $fetched = $res7->fetch_assoc()) {
+        $row7 = array_merge($row7, $fetched);
+    }
+}
 $InvoiceDate = date('Y-m-d');
+$batchOptionsHtml = buildBatchSelectOptions($conn, $BillSoftFrId);
 ?>
 
 <div class="layout-content">
@@ -103,7 +113,7 @@ $InvoiceDate = date('Y-m-d');
 </div>
 
 
-    <div class="form-group col-md-3">
+    <div class="form-group col-md-2">
 <label class="form-label">Available Stock </label>
 <input type="text" name="AvailStock" id="AvailStock" class="form-control" placeholder="" value="" autocomplete="off" readonly>
 <div class="clearfix"></div>
@@ -122,6 +132,14 @@ $InvoiceDate = date('Y-m-d');
     </div>
     <?php } ?>
     
+    <div class="form-group col-md-3">
+<label class="form-label">Batch No </label>
+<select class="select2-demo form-control" name="BatchNo" id="BatchNo">
+<?php echo $batchOptionsHtml; ?>
+</select>
+<div class="clearfix"></div>
+    </div>
+
     <div class="form-group col-md-3">
 <label class="form-label">Manufacturing Date </label>
 <input type="date" name="MfgDate" id="MfgDate" class="form-control" placeholder="" value="<?php echo $row7["MfgDate"]; ?>" autocomplete="off" >
@@ -221,6 +239,7 @@ $InvoiceDate = date('Y-m-d');
      var quantity = $('#Qty').val();
      var PurchasePrice = $('#PurchasePrice').val();
      var SellPrice = $('#SellPrice').val();
+     var BatchNo = $('#BatchNo').val();
      var MfgDate = $('#MfgDate').val();
      var ExpDate = $('#ExpDate').val();
      if(ProdId==''){
@@ -228,6 +247,9 @@ $InvoiceDate = date('Y-m-d');
      }
      else if(quantity==''){
          alert("Please Enter Qty");
+     }
+     else if(BatchNo==''){
+         alert("Please Select Batch No");
      }
      else{
             $.ajax({
@@ -240,6 +262,7 @@ $InvoiceDate = date('Y-m-d');
                     id:ProdId,
                     PurchasePrice:PurchasePrice,
                     SellPrice:SellPrice,
+                    BatchNo:BatchNo,
                     MfgDate:MfgDate,
                     ExpDate:ExpDate
                 },
@@ -254,11 +277,12 @@ $InvoiceDate = date('Y-m-d');
                  $('#add').attr('disabled',false);
                  $('#add').text('Add');
                  $('#code').val('');
-                 $('#ProdId').val(0).attr("selected",true);
+                 $('#ProdId').val('').trigger('change');
                  $('#Qty').val('');
                  $('#PurchasePrice').val('');
                  $('#SellPrice').val('');
                  $('#AvailStock').val('');
+                 $('#BatchNo').val('').trigger('change');
                  $('#MfgDate').val('');
                  $('#ExpDate').val('');
                     
@@ -370,9 +394,14 @@ $InvoiceDate = date('Y-m-d');
 
     $(document).ready(function(){
       var ProdId = $('#ProdId').val();
-      getAvailProdStock(ProdId);
+      if (ProdId) {
+        getAvailProdStock(ProdId);
+      }
 
-
+      $(document).on('change', '#BatchNo', function () {
+        var expDate = $(this).find('option:selected').data('expdate') || '';
+        $('#ExpDate').val(expDate);
+      });
   }); 
 </script>
 </body>
